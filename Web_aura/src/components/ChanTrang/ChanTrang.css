@@ -1,0 +1,93 @@
+.chan-trang {
+  padding-top: 65px;
+  background: #e9e6e0;
+}
+
+.luoi-chan-trang {
+  display: grid;
+  grid-template-columns: 1.4fr 0.7fr 0.8fr 1.3fr;
+  gap: 45px;
+}
+
+.logo-chan-trang {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.34em;
+}
+
+.luoi-chan-trang h3 {
+  margin: 0 0 18px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.luoi-chan-trang p {
+  max-width: 330px;
+  color: var(--mau-chu-mo);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.luoi-chan-trang > div > a:not(.logo-chan-trang) {
+  width: fit-content;
+  margin: 11px 0;
+  display: block;
+  font-size: 12px;
+}
+
+.luoi-chan-trang > div > a:not(.logo-chan-trang):hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.luoi-chan-trang form {
+  display: flex;
+  border-bottom: 1px solid var(--mau-den);
+}
+
+.luoi-chan-trang input {
+  width: 100%;
+  padding: 12px 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+}
+
+.luoi-chan-trang button {
+  border: 0;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ban-quyen {
+  margin-top: 60px;
+  padding-block: 20px;
+  border-top: 1px solid #d2cec7;
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 850px) {
+  .luoi-chan-trang {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .luoi-chan-trang {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .ban-quyen {
+    gap: 12px;
+    flex-direction: column;
+  }
+}

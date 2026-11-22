@@ -1,0 +1,120 @@
+.khung-noi-dung {
+  width: min(1320px, calc(100% - 48px));
+  margin-inline: auto;
+}
+
+.phan-noi-dung {
+  padding-block: clamp(64px, 8vw, 110px);
+}
+
+.nhan-nho {
+  margin: 0;
+  color: var(--mau-chu-mo);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.tieu-de-phan {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.tieu-de-phan h2 {
+  margin: 8px 0 0;
+  font-size: clamp(30px, 4vw, 52px);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+}
+
+.tieu-de-phan > a {
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--mau-den);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nut-chinh {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--mau-den);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  background: transparent;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition:
+    color 220ms ease,
+    background-color 220ms ease,
+    transform 220ms ease;
+}
+
+.nut-chinh:hover {
+  transform: translateY(-2px);
+  color: var(--mau-trang);
+  background: var(--mau-den);
+}
+
+.nut-nen-den {
+  color: var(--mau-trang);
+  background: var(--mau-den);
+}
+
+.nut-nen-den:hover {
+  color: var(--mau-den);
+  background: transparent;
+}
+
+@keyframes hien-tu-duoi {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mo-anh {
+  from {
+    opacity: 0;
+    clip-path: inset(100% 0 0);
+  }
+
+  to {
+    opacity: 1;
+    clip-path: inset(0);
+  }
+}
+
+@media (max-width: 600px) {
+  .khung-noi-dung {
+    width: calc(100% - 32px);
+  }
+
+  .tieu-de-phan {
+    align-items: start;
+  }
+
+  .tieu-de-phan h2 {
+    font-size: 31px;
+  }
+
+  .tieu-de-phan > a {
+    display: none;
+  }
+}

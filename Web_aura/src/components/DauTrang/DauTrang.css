@@ -1,0 +1,274 @@
+.dau-trang {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  border-bottom: 1px solid rgba(222, 219, 213, 0.9);
+  background: rgba(250, 249, 247, 0.9);
+  backdrop-filter: blur(16px);
+}
+
+.thanh-thong-bao {
+  padding: 7px 16px;
+  color: var(--mau-trang);
+  background: var(--mau-den);
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.noi-dung-dau-trang {
+  min-height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.thuong-hieu {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.36em;
+}
+
+.menu-chinh {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.menu-chinh a {
+  position: relative;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.menu-chinh a::after {
+  position: absolute;
+  right: 100%;
+  bottom: -7px;
+  left: 0;
+  height: 1px;
+  background: var(--mau-den);
+  content: '';
+  transition: right 280ms ease;
+}
+
+.menu-chinh a:hover::after {
+  right: 0;
+}
+
+.nhom-tien-ich {
+  display: flex;
+}
+
+.nut-bieu-tuong {
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  cursor: pointer;
+}
+
+.nut-bieu-tuong svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.7;
+}
+
+.nut-menu {
+  display: none;
+}
+
+.nut-gio-hang {
+  position: relative;
+}
+
+.so-luong-gio-hang {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  color: var(--mau-trang);
+  background: var(--mau-den);
+  font-size: 9px;
+}
+
+@media (max-width: 760px) {
+  .nut-menu {
+    display: grid;
+  }
+
+  .menu-chinh {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    max-height: 0;
+    padding-inline: 24px;
+    display: grid;
+    gap: 0;
+    overflow: hidden;
+    background: var(--mau-nen);
+    opacity: 0;
+    transition:
+      max-height 350ms ease,
+      opacity 250ms ease,
+      padding 350ms ease;
+  }
+
+  .menu-chinh.dang-mo {
+    max-height: 320px;
+    padding-block: 12px 22px;
+    opacity: 1;
+  }
+
+  .menu-chinh a {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--mau-vien);
+  }
+
+  .menu-chinh a::after {
+    display: none;
+  }
+
+  .nut-tai-khoan {
+    display: none;
+  }
+}
+
+/* ===== DROPDOWN TÀI KHOẢN ===== */
+.hop-tai-khoan {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.nut-tai-khoan {
+  position: relative;
+}
+
+.cham-dang-nhap {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #111111;
+  border: 1.5px solid #ffffff;
+}
+
+.menu-tai-khoan {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 268px;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(17, 24, 39, 0.12);
+  overflow: hidden;
+  z-index: 200;
+  text-align: left;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.dau-menu-tai-khoan {
+  padding: 18px 20px;
+  border-bottom: 1px solid #eceef2;
+}
+
+.nhan-tai-khoan {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.email-tai-khoan {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111111;
+  word-break: break-all;
+}
+
+.danh-sach-tai-khoan {
+  padding: 8px 0;
+  border-bottom: 1px solid #eceef2;
+}
+
+.muc-tai-khoan {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  color: #111111;
+  font-family: inherit;
+  font-size: 14.5px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.muc-tai-khoan:hover {
+  background-color: #f8f9fb;
+}
+
+.icon-muc-tai-khoan {
+  color: #6b7280;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.muc-quan-tri {
+  color: #1d53d4;
+  font-weight: 500;
+}
+
+.muc-quan-tri .icon-muc-tai-khoan {
+  color: #1d53d4;
+}
+
+.chan-menu-tai-khoan {
+  padding: 6px 0;
+}
+
+.muc-dang-xuat {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 20px;
+  border: none;
+  background: transparent;
+  color: #b91c1c;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.15s ease;
+}
+
+.muc-dang-xuat:hover {
+  background-color: #fef2f2;
+}

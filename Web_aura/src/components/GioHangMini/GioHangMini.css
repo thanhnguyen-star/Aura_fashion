@@ -1,0 +1,133 @@
+.lop-phu-gio-hang {
+  position: fixed;
+  inset: 0;
+  z-index: 29;
+  border: 0;
+  background: rgba(0, 0, 0, 0.38);
+  cursor: pointer;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity 300ms ease,
+    visibility 300ms ease;
+}
+
+.lop-phu-gio-hang.dang-hien {
+  visibility: visible;
+  opacity: 1;
+}
+
+.gio-hang-mini {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 30;
+  width: min(430px, 100%);
+  height: 100dvh;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  background: var(--mau-trang);
+  transform: translateX(100%);
+  transition: transform 400ms cubic-bezier(0.2, 0.75, 0.25, 1);
+}
+
+.gio-hang-mini.dang-mo {
+  transform: translateX(0);
+}
+
+.tieu-de-gio-hang {
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--mau-vien);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tieu-de-gio-hang h2 {
+  margin: 0;
+  font-size: 15px;
+  text-transform: uppercase;
+}
+
+.tieu-de-gio-hang button,
+.san-pham-trong-gio > button {
+  padding: 5px;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tieu-de-gio-hang svg {
+  width: 20px;
+}
+
+.danh-sach-trong-gio {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.thong-bao-gio-trong {
+  margin-top: 80px;
+  color: var(--mau-chu-mo);
+  text-align: center;
+  font-size: 13px;
+}
+
+.san-pham-trong-gio {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--mau-vien);
+  display: grid;
+  grid-template-columns: 84px 1fr auto;
+  gap: 14px;
+}
+
+.san-pham-trong-gio img {
+  width: 84px;
+  height: 110px;
+  object-fit: cover;
+}
+
+.san-pham-trong-gio h3 {
+  margin: 6px 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.san-pham-trong-gio p {
+  margin: 0 0 8px;
+  color: var(--mau-chu-mo);
+  font-size: 11px;
+}
+
+.san-pham-trong-gio strong {
+  font-size: 12px;
+}
+
+.san-pham-trong-gio > button svg {
+  width: 16px;
+}
+
+.tong-gio-hang {
+  padding-top: 10px;
+  border-top: 1px solid var(--mau-vien);
+}
+
+.tong-gio-hang p {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.tong-gio-hang > button {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  color: var(--mau-trang);
+  background: var(--mau-den);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+}

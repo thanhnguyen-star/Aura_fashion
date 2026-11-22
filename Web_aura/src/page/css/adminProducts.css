@@ -1,0 +1,587 @@
+/* ===== HEADER & 3 THẺ KPI ===== */
+.ap-header-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 22px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid #eef0f4;
+  flex-wrap: wrap;
+}
+
+.ap-eyebrow {
+  margin: 0 0 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.ap-eyebrow span {
+  color: #111827;
+}
+
+.ap-subtitle {
+  margin: 8px 0 0;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.ap-kpi-strip {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ap-kpi-mini {
+  min-width: 132px;
+  background-color: #ffffff;
+  border: 1px solid #e6e8ec;
+  border-radius: 6px;
+  padding: 12px 16px;
+}
+
+.ap-kpi-mini-label {
+  margin: 0 0 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.ap-kpi-mini-value {
+  margin: 0;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.ap-kpi-mini-value.danger {
+  color: #b91c1c;
+}
+
+/* ===== THANH TÌM KIẾM & LỌC ===== */
+.ap-toolbar {
+  background-color: #ffffff;
+  border: 1px solid #e6e8ec;
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ap-toolbar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ap-search-field {
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+  max-width: 480px;
+}
+
+.ap-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.ap-search-input {
+  width: 100%;
+  height: 38px;
+  padding: 0 14px 0 36px;
+  border: 1px solid #e6e8ec;
+  border-radius: 6px;
+  background-color: #f9fafb;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 13px;
+  color: #111827;
+  outline: none;
+}
+
+.ap-search-input:focus {
+  border-color: #1d53d4;
+  background-color: #ffffff;
+}
+
+.ap-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 6px;
+  background-color: #1d53d4;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ap-add-btn:hover {
+  background-color: #1744b0;
+}
+
+.ap-toolbar-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ap-category-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ap-cat-pill {
+  padding: 6px 14px;
+  border: 1px solid #e6e8ec;
+  border-radius: 4px;
+  background-color: #f3f4f6;
+  color: #374151;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 12.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ap-cat-pill:hover {
+  background-color: #e5e7eb;
+}
+
+.ap-cat-pill.active {
+  background-color: #1d53d4;
+  border-color: #1d53d4;
+  color: #ffffff;
+}
+
+.ap-status-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ap-status-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #6b7280;
+}
+
+.ap-status-select {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #e6e8ec;
+  border-radius: 4px;
+  background-color: #f9fafb;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 12.5px;
+  color: #111827;
+  outline: none;
+  cursor: pointer;
+}
+
+/* ===== BẢNG SẢN PHẨM ===== */
+.ap-table th,
+.ap-table td {
+  padding: 16px 18px;
+}
+
+.ap-table th:last-child,
+.ap-table td:last-child {
+  text-align: center;
+}
+
+.ap-row-clickable {
+  cursor: pointer;
+}
+
+.ap-index {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.ap-thumb {
+  width: 52px;
+  height: 58px;
+  border-radius: 4px;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+}
+
+.ap-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ap-prod-name {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 4px;
+  line-height: 1.35;
+}
+
+.ap-prod-sku {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.ap-variant-chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background-color: #f3f4f6;
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  color: #4b5563;
+}
+
+.ap-cat-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background-color: #f3f4f6;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 12px;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.ap-price-cell {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #111827;
+  white-space: nowrap;
+}
+
+.ap-price-unit {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-left: 4px;
+}
+
+.ap-print-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.ap-print-pill.dtg {
+  background-color: #eef2ff;
+  color: #1e3a8a;
+}
+
+.ap-print-pill.plain {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.ap-star-btn {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+}
+
+.ap-star-btn.active {
+  color: #1d53d4;
+}
+
+.ap-stock-pill {
+  display: inline-block;
+  padding: 4px 11px;
+  border-radius: 4px;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.ap-stock-pill.selling {
+  background-color: #eef2ff;
+  color: #1e3a8a;
+}
+
+.ap-stock-pill.out {
+  background-color: #f3e8ff;
+  color: #6b21a8;
+}
+
+.ap-stock-pill.hidden {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+/* ===== PHÂN TRANG ===== */
+.ap-pagination {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ap-pagination-info {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 12.5px;
+  color: #6b7280;
+}
+
+.ap-pagination-info strong {
+  color: #111827;
+}
+
+.ap-pagination-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ap-page-btn {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid #e6e8ec;
+  border-radius: 4px;
+  background-color: #ffffff;
+  color: #374151;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ap-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.ap-page-btn.active {
+  background-color: #1d53d4;
+  border-color: #1d53d4;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.ap-page-ellipsis {
+  padding: 0 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* ===== 3 THẺ QUY CHUẨN CUỐI TRANG ===== */
+.ap-info-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.ap-info-card {
+  background-color: #ffffff;
+  border: 1px solid #e6e8ec;
+  border-radius: 6px;
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.ap-info-eyebrow {
+  margin: 0 0 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+.ap-info-title {
+  margin: 0 0 10px;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.ap-info-desc {
+  margin: 0 0 18px;
+  font-family: 'Lora', Georgia, serif;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+.ap-info-link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: #111827;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ap-info-link:hover {
+  color: #1d53d4;
+}
+
+/* ===== MODAL THÊM / SỬA ===== */
+.ap-modal {
+  width: 100%;
+  max-width: 540px;
+}
+
+.ap-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.ap-form-full {
+  grid-column: 1 / -1;
+}
+
+.ap-field-label {
+  display: block;
+  margin-bottom: 5px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.ap-field-input,
+.ap-field-select,
+.ap-field-textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: #111827;
+  outline: none;
+}
+
+.ap-field-input:focus,
+.ap-field-select:focus,
+.ap-field-textarea:focus {
+  border-color: #1d53d4;
+}
+
+.ap-checkbox-row {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+
+.ap-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+}
+
+.ap-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.ap-btn-cancel {
+  padding: 9px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: #374151;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ap-btn-save {
+  padding: 9px 18px;
+  border: none;
+  border-radius: 6px;
+  background-color: #1d53d4;
+  color: #ffffff;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ap-btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1024px) {
+  .ap-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
