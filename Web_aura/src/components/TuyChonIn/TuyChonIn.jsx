@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Sparkles, SlidersHorizontal } from 'lucide-react';
+import { useMemo } from 'react';
+import { Ban, Check } from 'lucide-react';
 import './TuyChonIn.css';
 
 // SVG Áo Thun Tối Giản hỗ trợ đổi màu Hex động
@@ -50,62 +50,96 @@ function ShirtVector({ colorHex = '#000000' }) {
   );
 }
 
+// Icon áo với vị trí Ngực
+function ChestPositionIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8" cy="8" r="2" fill="currentColor" />
+    </svg>
+  );
+}
+
+// Icon áo với vị trí Tay áo
+function SleevePositionIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="5" cy="12" r="2" fill="currentColor" />
+    </svg>
+  );
+}
+
+// Danh sách mẫu fallback chuẩn
+const DEFAULT_BIG_TEMPLATES = [
+  { MaMauIn: 'big-1', TenMauIn: 'Geometric', DuongDanPNG: '/img/big/Big1.png', LoaiMau: 'MAU_LON' },
+  { MaMauIn: 'big-2', TenMauIn: 'Isometric', DuongDanPNG: '/img/big/Big2.png', LoaiMau: 'MAU_LON' },
+  { MaMauIn: 'big-3', TenMauIn: 'Topology', DuongDanPNG: '/img/big/Big3.png', LoaiMau: 'MAU_LON' },
+  { MaMauIn: 'big-4', TenMauIn: 'Minimalist', DuongDanPNG: '/img/big/Big4.png', LoaiMau: 'MAU_LON' },
+];
+
+const DEFAULT_LOGO_TEMPLATES = [
+  { MaMauIn: 'logo-1', TenMauIn: 'AURA Monogram', DuongDanPNG: '/img/logo/logo1.png', LoaiMau: 'LOGO' },
+  { MaMauIn: 'logo-2', TenMauIn: 'AURA Box', DuongDanPNG: '/img/logo/logo2.png', LoaiMau: 'LOGO' },
+  { MaMauIn: 'logo-3', TenMauIn: 'AURA Mini', DuongDanPNG: '/img/logo/logo3.png', LoaiMau: 'LOGO' },
+];
+
 export default function TuyChonIn({
   colorHex = '#000000',
   printTemplates = [],
+  // eslint-disable-next-line no-unused-vars
   printLocations = [],
+  printConfig,
   onPrintChange,
+  mode = 'full', // 'preview-only' | 'selector' | 'full'
 }) {
-  const [hasPrint, setHasPrint] = useState(true);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  // Phân loại mẫu in lớn & logo nhỏ từ props hoặc fallback
+  const bigTemplates = useMemo(() => {
+    const list = printTemplates.filter(
+      (t) => t.LoaiMau === 'MAU_LON' || t.LoaiMau === 'A3'
+    );
+    if (list.length > 0) return list;
+    return printTemplates.length > 0 ? printTemplates : DEFAULT_BIG_TEMPLATES;
+  }, [printTemplates]);
 
-  // Khởi tạo giá trị mặc định khi có dữ liệu
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (printLocations.length > 0 && !selectedLocation) {
-        setSelectedLocation(printLocations[0]);
-      }
-      if (printTemplates.length > 0 && !selectedTemplate) {
-        setSelectedTemplate(printTemplates[0]);
-      }
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [printLocations, printTemplates, selectedLocation, selectedTemplate]);
+  const logoTemplates = useMemo(() => {
+    const list = printTemplates.filter((t) => t.LoaiMau === 'LOGO');
+    if (list.length > 0) return list;
+    return DEFAULT_LOGO_TEMPLATES;
+  }, [printTemplates]);
 
-  // Báo cho component cha khi thay đổi tùy chọn in
-  useEffect(() => {
-    onPrintChange?.({
-      hasPrint,
-      location: hasPrint ? selectedLocation : null,
-      template: hasPrint ? selectedTemplate : null,
-    });
-  }, [hasPrint, selectedLocation, selectedTemplate, onPrintChange]);
+  // Cấu hình hiện tại (dùng từ props hoặc fallback an toàn)
+  const currentConfig = useMemo(() => {
+    return {
+      hasBigPrint: printConfig?.hasBigPrint ?? true,
+      bigTemplate: printConfig?.bigTemplate ?? bigTemplates[0],
+      hasLogo: printConfig?.hasLogo ?? true,
+      logoLocation: printConfig?.logoLocation ?? 'NGUC', // 'KHONG_IN' | 'NGUC' | 'TAY_AO'
+      logoTemplate: printConfig?.logoTemplate ?? logoTemplates[0],
+    };
+  }, [printConfig, bigTemplates, logoTemplates]);
 
-  // Xác định class tọa độ in
-  const getPositionClass = () => {
-    if (!selectedLocation) return 'tci-pos-a3-front';
-    const code = selectedLocation.MaViTri || '';
-    if (code === 'MAU_LON') return 'tci-pos-a3-front';
-    if (code === 'NGUC_TRAI') return 'tci-pos-nguc-trai';
-    if (code === 'TAY_AO') return 'tci-pos-tay-ao';
-    if (code === 'GAY_CO') return 'tci-pos-gay-co';
-    return 'tci-pos-a3-front';
-  };
+  // ==============================================================
+  // MODE: PREVIEW ONLY (Hiển thị áo mockup với mẫu in & logo trực quan)
+  // ==============================================================
+  if (mode === 'preview-only') {
+    const { hasBigPrint, bigTemplate, hasLogo, logoLocation, logoTemplate } = currentConfig;
 
-  return (
-    <div className="tci-container">
-      {/* KHUNG MOCKUP PREVIEW THỜI GIAN THỰC */}
-      <div className="tci-mockup-wrapper">
+    return (
+      <div className="tci-preview-wrapper">
         <ShirtVector colorHex={colorHex} />
 
-        {/* Lớp in đè lên phôi áo */}
-        {hasPrint && selectedTemplate && (
-          <div className={`tci-print-layer ${getPositionClass()}`}>
+        {/* 1. MẪU IN LỚN - HIỂN THỊ NGAY GIỮA NGỰC / THÂN ÁO */}
+        {hasBigPrint && bigTemplate && (
+          <div className="tci-big-print-box">
+            <div className="tci-big-label-tag">
+              <span>MẪU LỚN</span>
+              <span>25 × 30 cm</span>
+            </div>
             <img
-              src={selectedTemplate.DuongDanPNG}
-              alt={selectedTemplate.TenMauIn}
-              className="tci-print-img"
+              src={bigTemplate.DuongDanPNG}
+              alt={bigTemplate.TenMauIn}
+              className="tci-big-print-img"
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
@@ -113,101 +147,232 @@ export default function TuyChonIn({
           </div>
         )}
 
-        {/* Badge thông tin mockup */}
-        <div className="tci-mockup-badge">
-          <Sparkles size={13} color="#10b981" />
-          <span>
-            {hasPrint && selectedTemplate
-              ? `Mockup DTG · Vị trí: ${selectedLocation?.TenViTri || 'Mặt trước'}`
-              : 'Phôi áo trơn tiêu chuẩn'}
-          </span>
-        </div>
-      </div>
-
-      {/* PANEL TÙY BIẾN IN */}
-      <div className="tci-panel">
-        <div className="tci-panel-header">
-          <h3 className="tci-panel-title">
-            <SlidersHorizontal size={16} />
-            Tùy Biến In Theo Yêu Cầu
-          </h3>
-          <span className="tci-zero-fee-badge">Không phụ phí in ấn</span>
-        </div>
-
-        {/* Chọn chế độ: In mẫu hay Áo trơn */}
-        <div className="tci-mode-toggle">
-          <button
-            type="button"
-            className={`tci-mode-btn ${hasPrint ? 'active' : ''}`}
-            onClick={() => setHasPrint(true)}
+        {/* 2. LOGO NHỎ - HIỂN THỊ TẠI NGỰC HOẶC TAY ÁO */}
+        {hasLogo && logoLocation !== 'KHONG_IN' && logoTemplate && (
+          <div
+            className={`tci-logo-layer ${
+              logoLocation === 'NGUC' ? 'tci-pos-nguc' : 'tci-pos-tay-ao'
+            }`}
           >
-            In Theo Mẫu (+0đ)
-          </button>
-          <button
-            type="button"
-            className={`tci-mode-btn ${!hasPrint ? 'active' : ''}`}
-            onClick={() => setHasPrint(false)}
-          >
-            Áo Phôi Trơn
-          </button>
-        </div>
+            <img
+              src={logoTemplate.DuongDanPNG}
+              alt={logoTemplate.TenMauIn}
+              className="tci-logo-img"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+            <span className="tci-logo-tag">
+              {logoLocation === 'NGUC' ? 'Ngực' : 'Tay áo'}
+            </span>
+          </div>
+        )}
 
-        {hasPrint && (
-          <>
-            {/* Chọn vị trí in */}
-            <div>
-              <span className="tci-section-label">1. Chọn Vị Trí In Ấn:</span>
-              <div className="tci-locations-list">
-                {printLocations.map((loc) => {
-                  const isActive = selectedLocation?.MaViTriIn === loc.MaViTriIn;
-                  return (
-                    <button
-                      key={loc.MaViTriIn}
-                      type="button"
-                      className={`tci-loc-btn ${isActive ? 'active' : ''}`}
-                      onClick={() => setSelectedLocation(loc)}
-                    >
-                      {loc.TenViTri}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Chọn mẫu in PNG trong suốt */}
-            <div>
-              <span className="tci-section-label">2. Chọn Mẫu In PNG Trong Suốt:</span>
-              {printTemplates.length === 0 ? (
-                <div style={{ fontSize: '12px', color: '#71717a' }}>Đang tải thư viện mẫu in...</div>
-              ) : (
-                <div className="tci-templates-grid">
-                  {printTemplates.map((tpl) => {
-                    const isActive = selectedTemplate?.MaMauIn === tpl.MaMauIn;
-                    return (
-                      <div
-                        key={tpl.MaMauIn}
-                        className={`tci-tpl-card ${isActive ? 'active' : ''}`}
-                        onClick={() => setSelectedTemplate(tpl)}
-                        title={tpl.TenMauIn}
-                      >
-                        <img
-                          src={tpl.DuongDanPNG}
-                          alt={tpl.TenMauIn}
-                          className="tci-tpl-img"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                        <span className="tci-tpl-name">{tpl.TenMauIn}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </>
+        {/* Badge thông tin mẫu in */}
+        {hasBigPrint && bigTemplate && (
+          <div className="tci-template-badge">
+            {bigTemplate.TenMauIn}
+          </div>
         )}
       </div>
-    </div>
-  );
+    );
+  }
+
+  // ==============================================================
+  // MODE: SELECTOR (Các ô tùy chọn bên cột phải)
+  // ==============================================================
+  if (mode === 'selector') {
+    const { hasBigPrint, bigTemplate, logoLocation, logoTemplate } = currentConfig;
+
+    const handleSelectBigTemplate = (tpl) => {
+      onPrintChange?.({
+        ...currentConfig,
+        hasBigPrint: true,
+        bigTemplate: tpl,
+      });
+    };
+
+    const handleDisableBigPrint = () => {
+      onPrintChange?.({
+        ...currentConfig,
+        hasBigPrint: false,
+      });
+    };
+
+    const handleSelectLogoLocation = (loc) => {
+      onPrintChange?.({
+        ...currentConfig,
+        logoLocation: loc,
+        hasLogo: loc !== 'KHONG_IN',
+      });
+    };
+
+    const handleSelectLogoTemplate = (tpl) => {
+      onPrintChange?.({
+        ...currentConfig,
+        hasLogo: true,
+        logoTemplate: tpl,
+      });
+    };
+
+    return (
+      <div className="tci-selector">
+        {/* ——— MẪU IN LỚN · GIỮA THÂN ÁO ——— */}
+        <div className="tci-selector-group">
+          <div className="tci-selector-header">
+            <span className="tci-selector-label">MẪU IN LỚN · GIỮA THÂN ÁO</span>
+            <span className="tci-selector-info">
+              Vị trí cố định · Chọn tối đa 1 mẫu · Khổ 25 × 30 cm
+            </span>
+          </div>
+
+          <div className="tci-selector-options">
+            {/* Không in */}
+            <div
+              className={`tci-opt-card ${!hasBigPrint ? 'active' : ''}`}
+              onClick={handleDisableBigPrint}
+            >
+              {!hasBigPrint && (
+                <div className="tci-check-badge">
+                  <Check size={10} strokeWidth={3} />
+                </div>
+              )}
+              <div className="tci-opt-icon">
+                <Ban size={20} />
+              </div>
+              <span className="tci-opt-name">Không in</span>
+            </div>
+
+            {/* Danh sách các mẫu in lớn */}
+            {bigTemplates.map((tpl) => {
+              const isActive = hasBigPrint && bigTemplate?.MaMauIn === tpl.MaMauIn;
+              return (
+                <div
+                  key={tpl.MaMauIn}
+                  className={`tci-opt-card ${isActive ? 'active' : ''}`}
+                  onClick={() => handleSelectBigTemplate(tpl)}
+                  title={tpl.TenMauIn}
+                >
+                  {isActive && (
+                    <div className="tci-check-badge">
+                      <Check size={10} strokeWidth={3} />
+                    </div>
+                  )}
+                  <div className="tci-opt-icon">
+                    <img
+                      src={tpl.DuongDanPNG}
+                      alt={tpl.TenMauIn}
+                      className="tci-opt-img"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                  <span className="tci-opt-name">{tpl.TenMauIn}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ——— LOGO NHỎ ——— */}
+        <div className="tci-selector-group">
+          <div className="tci-selector-header">
+            <span className="tci-selector-label">LOGO NHỎ</span>
+            <span className="tci-selector-info">
+              Chọn 1 vị trí và 1 logo · Khổ 4 × 4 cm
+            </span>
+          </div>
+
+          {/* Vị trí logo: Gồm có Không in, Ngực và Tay áo */}
+          <div className="tci-selector-subheader">Vị trí logo:</div>
+          <div className="tci-selector-options">
+            {/* Không in logo */}
+            <div
+              className={`tci-opt-card ${logoLocation === 'KHONG_IN' ? 'active' : ''}`}
+              onClick={() => handleSelectLogoLocation('KHONG_IN')}
+            >
+              {logoLocation === 'KHONG_IN' && (
+                <div className="tci-check-badge">
+                  <Check size={10} strokeWidth={3} />
+                </div>
+              )}
+              <div className="tci-opt-icon">
+                <Ban size={20} />
+              </div>
+              <span className="tci-opt-name">Không in</span>
+            </div>
+
+            {/* Vị trí Ngực */}
+            <div
+              className={`tci-opt-card ${logoLocation === 'NGUC' ? 'active' : ''}`}
+              onClick={() => handleSelectLogoLocation('NGUC')}
+            >
+              {logoLocation === 'NGUC' && (
+                <div className="tci-check-badge">
+                  <Check size={10} strokeWidth={3} />
+                </div>
+              )}
+              <div className="tci-opt-icon">
+                <ChestPositionIcon />
+              </div>
+              <span className="tci-opt-name">Ngực</span>
+            </div>
+
+            {/* Vị trí Tay áo */}
+            <div
+              className={`tci-opt-card ${logoLocation === 'TAY_AO' ? 'active' : ''}`}
+              onClick={() => handleSelectLogoLocation('TAY_AO')}
+            >
+              {logoLocation === 'TAY_AO' && (
+                <div className="tci-check-badge">
+                  <Check size={10} strokeWidth={3} />
+                </div>
+              )}
+              <div className="tci-opt-icon">
+                <SleevePositionIcon />
+              </div>
+              <span className="tci-opt-name">Tay áo</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ——— CHỌN LOGO (khi vị trí khác "Không in") ——— */}
+        {logoLocation !== 'KHONG_IN' && (
+          <div className="tci-selector-group">
+            <div className="tci-selector-subheader">Chọn logo:</div>
+            <div className="tci-logo-grid">
+              {logoTemplates.map((tpl) => {
+                const isActive = logoTemplate?.MaMauIn === tpl.MaMauIn;
+                return (
+                  <div
+                    key={`logo-${tpl.MaMauIn}`}
+                    className={`tci-logo-card ${isActive ? 'active' : ''}`}
+                    onClick={() => handleSelectLogoTemplate(tpl)}
+                  >
+                    {isActive && (
+                      <div className="tci-check-badge">
+                        <Check size={10} strokeWidth={3} />
+                      </div>
+                    )}
+                    <img
+                      src={tpl.DuongDanPNG}
+                      alt={tpl.TenMauIn}
+                      className="tci-logo-img-thumb"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                    <span className="tci-logo-name">{tpl.TenMauIn}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  return null;
 }

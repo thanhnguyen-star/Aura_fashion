@@ -1,41 +1,54 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
-  ChevronRight,
   ShoppingBag,
-  Zap,
-  ShieldCheck,
   RefreshCw,
-  Truck,
   Sparkles,
+  Search,
 } from 'lucide-react';
 import TuyChonIn from '../../components/TuyChonIn/TuyChonIn';
 import '../css/chiTietSanPham.css';
 
 function formatCurrency(val) {
-  return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
+  return new Intl.NumberFormat('vi-VN').format(val || 0) + 'đ';
 }
 
 export default function ChiTietSanPham({
   productId = 1,
   onBackToStore,
   onAddToCart,
+  // eslint-disable-next-line no-unused-vars
   onBuyNow,
 }) {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Lựa chọn biến thể
+  // Lựa chọn biến thể Size & Màu
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
 
-  // Lựa chọn tùy biến in từ TuyChonIn
+  // Lựa chọn tùy biến in: Mẫu in lớn & Logo nhỏ (mặc định Ngực)
   const [printConfig, setPrintConfig] = useState({
-    hasPrint: true,
-    location: null,
-    template: null,
+    hasBigPrint: true,
+    bigTemplate: null,
+    hasLogo: true,
+    logoLocation: 'NGUC', // 'KHONG_IN' | 'NGUC' | 'TAY_AO'
+    logoTemplate: null,
   });
+
+  // Trạng thái phóng to (hover zoom) trên mockup áo
+  const [isZooming, setIsZooming] = useState(false);
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 });
+  const imgRef = useRef(null);
+
+  const handleMouseMove = useCallback((e) => {
+    if (!imgRef.current) return;
+    const rect = imgRef.current.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomPos({ x, y });
+  }, []);
 
   const fetchProductDetail = useCallback(async () => {
     try {
@@ -62,6 +75,20 @@ export default function ChiTietSanPham({
           id: firstVariant.MaKichThuoc,
           name: firstVariant.TenKichThuoc,
         });
+      }
+
+      // Cập nhật mẫu in từ dữ liệu server nếu có
+      if (data.data.printTemplates && data.data.printTemplates.length > 0) {
+        const bigs = data.data.printTemplates.filter(
+          (t) => t.LoaiMau === 'MAU_LON' || t.LoaiMau === 'A3'
+        );
+        const logos = data.data.printTemplates.filter((t) => t.LoaiMau === 'LOGO');
+
+        setPrintConfig((prev) => ({
+          ...prev,
+          bigTemplate: bigs.length > 0 ? bigs[0] : (prev.bigTemplate || data.data.printTemplates[0]),
+          logoTemplate: logos.length > 0 ? logos[0] : (prev.logoTemplate || null),
+        }));
       }
     } catch (err) {
       console.error('Lỗi tải chi tiết sản phẩm:', err);
@@ -125,8 +152,17 @@ export default function ChiTietSanPham({
   const handleAddToCart = () => {
     if (!activeVariant || isOutOfStock) return;
 
+    const hasAnyPrint = Boolean(
+      printConfig.hasBigPrint ||
+      (printConfig.hasLogo && printConfig.logoLocation !== 'KHONG_IN')
+    );
+
+    const primaryTemplate = printConfig.hasBigPrint
+      ? printConfig.bigTemplate
+      : (printConfig.hasLogo ? printConfig.logoTemplate : null);
+
     const cartItem = {
-      id: `${product.MaSanPham}-${activeVariant.MaBienThe}-${printConfig.hasPrint ? printConfig.template?.MaMauIn : 'plain'}`,
+      id: `${product.MaSanPham}-${activeVariant.MaBienThe}-${printConfig.hasBigPrint ? printConfig.bigTemplate?.MaMauIn : 'nobig'}-${printConfig.hasLogo ? (printConfig.logoTemplate?.MaMauIn + '-' + printConfig.logoLocation) : 'nologo'}`,
       productId: product.MaSanPham,
       variantId: activeVariant.MaBienThe,
       name: product.TenSanPham,
@@ -136,30 +172,42 @@ export default function ChiTietSanPham({
       colorHex: selectedColor.hex,
       price: product.GiaBan,
       quantity,
-      hasPrint: printConfig.hasPrint,
-      printLocation: printConfig.location?.TenViTri || null,
-      printLocationId: printConfig.location?.MaViTriIn || null,
-      printTemplate: printConfig.template?.TenMauIn || null,
-      printTemplateId: printConfig.template?.MaMauIn || null,
-      printImage: printConfig.template?.DuongDanPNG || null,
+      hasPrint: hasAnyPrint,
+      printLocation: printConfig.logoLocation === 'NGUC' ? 'Ngực' : (printConfig.logoLocation === 'TAY_AO' ? 'Tay áo' : 'Giữa thân áo'),
+      printLocationId: printConfig.logoLocation,
+      printTemplate: primaryTemplate?.TenMauIn || null,
+      printTemplateId: primaryTemplate?.MaMauIn || null,
+      printImage: primaryTemplate?.DuongDanPNG || null,
+      bigTemplate: printConfig.bigTemplate,
+      logoTemplate: printConfig.logoTemplate,
+      logoLocation: printConfig.logoLocation,
       productImage: product.images?.[0]?.DuongDan || '/img/sp1.png',
     };
 
     onAddToCart?.(cartItem);
   };
 
-  const handleBuyNow = () => {
-    if (!activeVariant || isOutOfStock) return;
-    handleAddToCart();
-    onBuyNow?.();
-  };
+  // Build summary text cho selection
+  const selectionSummary = useMemo(() => {
+    const parts = [];
+    if (printConfig.hasBigPrint && printConfig.bigTemplate) {
+      parts.push(`Mẫu lớn ${printConfig.bigTemplate.TenMauIn} (giữa thân áo)`);
+    }
+    if (printConfig.hasLogo && printConfig.logoLocation !== 'KHONG_IN' && printConfig.logoTemplate) {
+      const locName = printConfig.logoLocation === 'NGUC' ? 'ngực' : 'tay áo';
+      parts.push(`Logo ${printConfig.logoTemplate.TenMauIn} (${locName})`);
+    }
+    return parts.length > 0
+      ? `Đã chọn: ${parts.join(' · ')}`
+      : 'Mẫu in không tính thêm phí';
+  }, [printConfig]);
 
   if (loading) {
     return (
       <div className="ctsp-shell" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
         <div style={{ textAlign: 'center', color: '#71717a' }}>
           <RefreshCw className="spin" size={28} style={{ margin: '0 auto 10px', display: 'block' }} />
-          Đang tải thông tin sản phẩm và phòng thử in DTG...
+          Đang tải thông tin sản phẩm...
         </div>
       </div>
     );
@@ -196,185 +244,189 @@ export default function ChiTietSanPham({
           <button
             type="button"
             className="ctsp-bc-link"
-            style={{ background: 'none', border: 'none', padding: 0 }}
             onClick={onBackToStore}
           >
-            Trang chủ
+            TRANG CHỦ
           </button>
-          <ChevronRight size={13} />
-          <span className="ctsp-bc-link">{product.TenDanhMuc || 'Thời trang in'}</span>
-          <ChevronRight size={13} />
+          <span className="ctsp-bc-sep">/</span>
+          <span className="ctsp-bc-link">{product.TenDanhMuc || 'Áo thun'}</span>
+          <span className="ctsp-bc-sep">/</span>
           <span className="ctsp-bc-current">{product.TenSanPham}</span>
         </nav>
 
-        {/* 2 Columns: Mockup Customizer Left & Product Info Right */}
+        {/* 2 Columns Layout */}
         <div className="ctsp-grid">
-          {/* CỘT TRÁI: MOCKUP CANVAS PREVIEW & TÙY BIẾN IN */}
+          {/* CỘT TRÁI: Thông tin + Hình ảnh Mockup (Với Hover Zoom) */}
           <div className="ctsp-left-col">
-            <TuyChonIn
-              colorHex={selectedColor?.hex || '#000000'}
-              printTemplates={product.printTemplates || []}
-              printLocations={product.printLocations || []}
-              onPrintChange={setPrintConfig}
-            />
+            {/* Badge hỗ trợ in */}
+            <span className="ctsp-badge-support">
+              Hỗ trợ in theo mẫu · Không phụ phí in
+            </span>
+
+            {/* Tên sản phẩm */}
+            <h1 className="ctsp-title">{product.TenSanPham}</h1>
+
+            {/* Giá + Mã SP */}
+            <div className="ctsp-price-row">
+              <span className="ctsp-price">{formatCurrency(product.GiaBan)}</span>
+              <span className="ctsp-sku">Mã sản phẩm: {activeVariant?.SKU || product.MaHienThi}</span>
+            </div>
+
+            {/* Mô tả ngắn */}
+            {product.MoTa && (
+              <p className="ctsp-desc">{product.MoTa}</p>
+            )}
+
+            {/* Khung Mockup Preview lớn với hover zoom */}
+            <div
+              className={`ctsp-image-wrapper ${isZooming ? 'zooming' : ''}`}
+              ref={imgRef}
+              onMouseEnter={() => setIsZooming(true)}
+              onMouseLeave={() => setIsZooming(false)}
+              onMouseMove={handleMouseMove}
+              style={isZooming ? { '--zoom-x': `${zoomPos.x}%`, '--zoom-y': `${zoomPos.y}%` } : undefined}
+            >
+              <div className="ctsp-image-inner">
+                <TuyChonIn
+                  colorHex={selectedColor?.hex || '#000000'}
+                  printTemplates={product.printTemplates || []}
+                  printLocations={product.printLocations || []}
+                  printConfig={printConfig}
+                  onPrintChange={setPrintConfig}
+                  mode="preview-only"
+                />
+              </div>
+              <button type="button" className="ctsp-zoom-btn" aria-label="Phóng to">
+                <Search size={18} />
+              </button>
+            </div>
           </div>
 
-          {/* CỘT PHẢI: CHI TIẾT SẢN PHẨM & ĐẶT HÀNG */}
+          {/* CỘT PHẢI: Tùy chọn + Mua hàng (một khung bordered duy nhất) */}
           <div className="ctsp-right-col">
-            <div>
-              <span className="ctsp-badge-support">
-                <Sparkles size={13} />
-                Hỗ trợ in theo mẫu · Không phụ phí in
-              </span>
+            <div className="ctsp-options-panel">
+              {/* Kích cỡ */}
+              <div className="ctsp-option-group">
+                <div className="ctsp-option-header">
+                  <span className="ctsp-option-label">KÍCH CỠ</span>
+                  <button type="button" className="ctsp-size-guide-link">
+                    <Sparkles size={12} />
+                    Bảng quy đổi size
+                  </button>
+                </div>
+                <div className="ctsp-size-list">
+                  {availableSizes.map((size) => {
+                    const isActive = selectedSize?.id === size.id;
+                    const v = product.variants.find(
+                      (item) => item.MaMauSac === selectedColor?.id && item.MaKichThuoc === size.id
+                    );
+                    const isAvailable = v && v.SoLuongTon > 0;
 
-              <h1 className="ctsp-title">{product.TenSanPham}</h1>
-
-              <div className="ctsp-meta-bar">
-                <span>
-                  Mã SP: <span className="ctsp-code">{activeVariant?.SKU || product.MaHienThi}</span>
-                </span>
-                <span>·</span>
-                <span>Dòng sản phẩm: {product.TenDanhMuc}</span>
+                    return (
+                      <button
+                        key={size.id}
+                        type="button"
+                        disabled={!isAvailable}
+                        className={`ctsp-size-btn ${isActive ? 'active' : ''}`}
+                        onClick={() => setSelectedSize(size)}
+                      >
+                        {size.name}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Chỉ báo tồn kho */}
+                <div className="ctsp-stock-indicator">
+                  {isOutOfStock ? (
+                    <span className="ctsp-stock-out">Hết hàng</span>
+                  ) : (
+                    <span className="ctsp-stock-available">
+                      Còn {stockCount} sản phẩm
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <div className="ctsp-price-box">
-                <span className="ctsp-price">{formatCurrency(product.GiaBan)}</span>
-                <span style={{ fontSize: '13px', color: '#10b981', fontWeight: 600 }}>Miễn phí in ấn DTG</span>
-              </div>
+              {/* Đường kẻ phân cách */}
+              <div className="ctsp-divider" />
 
-              <p className="ctsp-desc">{product.MoTa}</p>
-            </div>
+              {/* Màu sắc + Số lượng cùng hàng */}
+              <div className="ctsp-color-qty-row">
+                <div className="ctsp-color-group">
+                  <span className="ctsp-option-label">MÀU SẮC: <strong>{selectedColor?.name}</strong></span>
+                  <div className="ctsp-color-swatches">
+                    {availableColors.map((color) => {
+                      const isActive = selectedColor?.id === color.id;
+                      return (
+                        <div
+                          key={color.id}
+                          className={`ctsp-swatch-item ${isActive ? 'active' : ''}`}
+                          onClick={() => setSelectedColor(color)}
+                          title={color.name}
+                        >
+                          <div className="ctsp-swatch-circle" style={{ backgroundColor: color.hex }} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
 
-            {/* Bộ Chọn Màu Sắc */}
-            <div>
-              <div className="ctsp-section-title">
-                <span>1. Màu sắc áo: <strong>{selectedColor?.name}</strong></span>
-              </div>
-              <div className="ctsp-color-swatches">
-                {availableColors.map((color) => {
-                  const isActive = selectedColor?.id === color.id;
-                  return (
-                    <div
-                      key={color.id}
-                      className={`ctsp-swatch-item ${isActive ? 'active' : ''}`}
-                      onClick={() => setSelectedColor(color)}
-                    >
-                      <div className="ctsp-swatch-circle" style={{ backgroundColor: color.hex }} />
-                      <span className="ctsp-swatch-label">{color.name}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Bộ Chọn Kích Cỡ */}
-            <div>
-              <div className="ctsp-section-title">
-                <span>2. Kích thước (Size): <strong>{selectedSize?.name}</strong></span>
-                <span style={{ fontSize: '11px', color: '#71717a', cursor: 'pointer', textDecoration: 'underline' }}>
-                  Bảng thông số size
-                </span>
-              </div>
-              <div className="ctsp-size-list">
-                {availableSizes.map((size) => {
-                  const isActive = selectedSize?.id === size.id;
-                  // Kiểm tra tồn kho của size này với màu đang chọn
-                  const v = product.variants.find(
-                    (item) => item.MaMauSac === selectedColor?.id && item.MaKichThuoc === size.id
-                  );
-                  const isAvailable = v && v.SoLuongTon > 0;
-
-                  return (
+                <div className="ctsp-qty-group">
+                  <span className="ctsp-option-label">SỐ LƯỢNG</span>
+                  <div className="ctsp-qty-control">
                     <button
-                      key={size.id}
                       type="button"
-                      disabled={!isAvailable}
-                      className={`ctsp-size-btn ${isActive ? 'active' : ''}`}
-                      onClick={() => setSelectedSize(size)}
+                      className="ctsp-qty-btn"
+                      disabled={quantity <= 1}
+                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     >
-                      {size.name}
+                      −
                     </button>
-                  );
-                })}
-              </div>
-
-              {/* Chỉ báo tồn kho */}
-              <div className="ctsp-stock-indicator">
-                {isOutOfStock ? (
-                  <span className="ctsp-stock-out">✕ Hết hàng (Vui lòng chọn size hoặc màu khác)</span>
-                ) : (
-                  <span className="ctsp-stock-available">
-                    ✓ Còn <strong>{stockCount}</strong> sản phẩm sẵn sàng giao
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Số lượng & Nút Thao Tác */}
-            <div className="ctsp-actions-box">
-              <div className="ctsp-qty-row">
-                <span style={{ fontSize: '13px', fontWeight: 600, color: '#18181b' }}>Số lượng:</span>
-                <div className="ctsp-qty-control">
-                  <button
-                    type="button"
-                    className="ctsp-qty-btn"
-                    disabled={quantity <= 1}
-                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  >
-                    -
-                  </button>
-                  <span className="ctsp-qty-val">{quantity}</span>
-                  <button
-                    type="button"
-                    className="ctsp-qty-btn"
-                    disabled={quantity >= stockCount}
-                    onClick={() => setQuantity((q) => Math.min(stockCount, q + 1))}
-                  >
-                    +
-                  </button>
+                    <span className="ctsp-qty-val">{quantity}</span>
+                    <button
+                      type="button"
+                      className="ctsp-qty-btn"
+                      disabled={quantity >= stockCount}
+                      onClick={() => setQuantity((q) => Math.min(stockCount, q + 1))}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
-                <button
-                  type="button"
-                  className="ctsp-btn-add"
-                  disabled={isOutOfStock}
-                  onClick={handleAddToCart}
-                >
-                  <ShoppingBag size={17} />
-                  <span>Thêm Vào Giỏ Hàng</span>
-                </button>
+              {/* Đường kẻ phân cách */}
+              <div className="ctsp-divider" />
 
-                <button
-                  type="button"
-                  className="ctsp-btn-buy"
-                  disabled={isOutOfStock}
-                  onClick={handleBuyNow}
-                >
-                  <Zap size={16} />
-                  <span>Mua Ngay</span>
-                </button>
-              </div>
-            </div>
+              {/* Tùy chọn in - Selector */}
+              <TuyChonIn
+                colorHex={selectedColor?.hex || '#000000'}
+                printTemplates={product.printTemplates || []}
+                printLocations={product.printLocations || []}
+                printConfig={printConfig}
+                onPrintChange={setPrintConfig}
+                mode="selector"
+              />
 
-            {/* Cam Kết Dịch Vụ */}
-            <div className="ctsp-commitments">
-              <div className="ctsp-cmt-item">
-                <Truck size={17} color="#18181b" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <div>
-                  <strong>Giao hàng toàn quốc</strong>
-                  <div>2 - 3 ngày làm việc, đóng gói hộp cao cấp.</div>
-                </div>
+              {/* Tóm tắt lựa chọn */}
+              <div className="ctsp-selection-summary">
+                <Sparkles size={13} />
+                <span>{selectionSummary}</span>
               </div>
 
-              <div className="ctsp-cmt-item">
-                <ShieldCheck size={17} color="#18181b" style={{ flexShrink: 0, marginTop: '2px' }} />
-                <div>
-                  <strong>Bảo hành in ấn DTG</strong>
-                  <div>Cam kết mực in không bong tróc, chuẩn màu.</div>
-                </div>
-              </div>
+              {/* Nút Thêm Vào Giỏ Hàng lớn */}
+              <button
+                type="button"
+                className="ctsp-btn-add"
+                disabled={isOutOfStock}
+                onClick={handleAddToCart}
+              >
+                <ShoppingBag size={18} />
+                <span>Thêm Vào Giỏ Hàng — {formatCurrency(product.GiaBan)}</span>
+              </button>
+
+              {/* Chú thích nhỏ */}
+              <p className="ctsp-print-note">Mẫu in không tính thêm phí</p>
             </div>
           </div>
         </div>
