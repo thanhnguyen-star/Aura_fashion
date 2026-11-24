@@ -22,4 +22,21 @@ function requireAdmin(req, res, next) {
   }
 }
 
-module.exports = { requireAdmin, JWT_SECRET };
+function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: 'Vui lòng đăng nhập để tiếp tục' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    return res.status(401).json({ success: false, message: 'Phiên đăng nhập đã hết hạn' });
+  }
+}
+
+module.exports = { requireAdmin, requireAuth, JWT_SECRET };

@@ -1,0 +1,516 @@
+/* ===== CHECKOUT WIZARD STYLING (SCREENS 10-14 FIGMA) ===== */
+
+.cw-shell {
+  min-height: 100vh;
+  background: #ffffff;
+  padding-bottom: 80px;
+}
+
+.cw-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+/* Stepper Header (3 Bước Chuẩn Figma) */
+.cw-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+  gap: 16px;
+}
+
+.cw-step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #a1a1aa;
+  transition: all 0.2s ease;
+}
+
+.cw-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid #d4d4d8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #71717a;
+}
+
+.cw-step-item.active {
+  color: #09090b;
+}
+
+.cw-step-item.active .cw-step-num {
+  background: #09090b;
+  color: #ffffff;
+  border-color: #09090b;
+}
+
+.cw-step-item.done {
+  color: #15803d;
+}
+
+.cw-step-item.done .cw-step-num {
+  background: #dcfce7;
+  color: #15803d;
+  border-color: #86efac;
+}
+
+.cw-step-divider {
+  width: 50px;
+  height: 1px;
+  background: #e4e4e7;
+}
+
+/* ================= STEP 1: GIỎ HÀNG ================= */
+.cw-cart-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 36px;
+  align-items: flex-start;
+}
+
+@media (max-width: 860px) {
+  .cw-cart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cw-cart-items-box {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cw-cart-item {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  border-bottom: 1px solid #f4f4f5;
+  align-items: center;
+}
+
+.cw-cart-item:last-child {
+  border-bottom: none;
+}
+
+.cw-item-img {
+  width: 80px;
+  height: 80px;
+  background: #f4f4f5;
+  border-radius: 6px;
+  object-fit: contain;
+  border: 1px solid #e4e4e7;
+}
+
+.cw-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.cw-item-title {
+  margin: 0 0 4px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #09090b;
+}
+
+.cw-item-sub {
+  font-size: 12px;
+  color: #71717a;
+  margin-bottom: 4px;
+}
+
+.cw-print-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f4f4f5;
+  color: #18181b;
+  padding: 3px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.cw-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.cw-item-qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #d4d4d8;
+  border-radius: 4px;
+  background: #fafafa;
+}
+
+.cw-qty-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.cw-qty-val {
+  width: 30px;
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.cw-item-price {
+  font-size: 15px;
+  font-weight: 700;
+  color: #09090b;
+  min-width: 100px;
+  text-align: right;
+}
+
+.cw-btn-delete {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #a1a1aa;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.cw-btn-delete:hover {
+  color: #ef4444;
+}
+
+/* Empty State (Screen 11 Figma) */
+.cw-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px dashed #d4d4d8;
+}
+
+.cw-empty-title {
+  margin: 16px 0 6px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #09090b;
+}
+
+.cw-empty-desc {
+  margin: 0 0 24px;
+  font-size: 13.5px;
+  color: #71717a;
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Order Summary Card */
+.cw-summary-card {
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cw-summary-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #09090b;
+  border-bottom: 1px solid #e4e4e7;
+  padding-bottom: 10px;
+}
+
+.cw-summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+  color: #52525b;
+}
+
+.cw-summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-top: 1px solid #e4e4e7;
+  padding-top: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #09090b;
+}
+
+.cw-total-price {
+  font-size: 22px;
+  font-weight: 800;
+  color: #09090b;
+}
+
+.cw-btn-submit {
+  width: 100%;
+  background: #09090b;
+  color: #ffffff;
+  border: 1px solid #09090b;
+  padding: 14px 20px;
+  border-radius: 4px;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.15s ease;
+}
+
+.cw-btn-submit:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.cw-btn-submit:disabled {
+  background: #a1a1aa;
+  border-color: #a1a1aa;
+  cursor: not-allowed;
+}
+
+/* ================= STEP 2: GIAO NHẬN (SCREEN 12 FIGMA) ================= */
+.cw-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cw-form-box {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.cw-form-title {
+  margin: 0 0 16px;
+  font-size: 14.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #09090b;
+}
+
+.cw-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+@media (max-width: 600px) {
+  .cw-field-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cw-field-group {
+  margin-bottom: 14px;
+}
+
+.cw-field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #18181b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 6px;
+}
+
+.cw-input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid #d4d4d8;
+  border-radius: 4px;
+  font-size: 13.5px;
+  background: #fafafa;
+  box-sizing: border-box;
+}
+
+.cw-input:focus {
+  outline: none;
+  border-color: #09090b;
+  background: #ffffff;
+}
+
+/* Phương Thức Thanh Toán Cards */
+.cw-payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cw-pay-card {
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cw-pay-card:hover {
+  border-color: #71717a;
+}
+
+.cw-pay-card.active {
+  border-color: #09090b;
+  background: #fafafa;
+  box-shadow: 0 0 0 1.5px #09090b;
+}
+
+.cw-pay-radio {
+  accent-color: #09090b;
+  width: 18px;
+  height: 18px;
+}
+
+.cw-pay-meta {
+  flex: 1;
+}
+
+.cw-pay-name {
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #09090b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cw-pay-desc {
+  font-size: 12px;
+  color: #71717a;
+  margin-top: 2px;
+}
+
+/* ================= STEP 3: HOÀN TẤT & VIETQR (SCREENS 13 & 14) ================= */
+.cw-complete-box {
+  max-width: 640px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 36px 28px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+.cw-success-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #15803d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.cw-complete-title {
+  font-family: 'Lora', Georgia, serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #09090b;
+  margin: 0 0 8px;
+}
+
+.cw-order-code {
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 700;
+  background: #f4f4f5;
+  padding: 4px 10px;
+  border-radius: 4px;
+  color: #09090b;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+/* VietQR Section (Screen 13 Figma) */
+.cw-qr-card {
+  background: #fafafa;
+  border: 1px dashed #d4d4d8;
+  border-radius: 8px;
+  padding: 24px;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.cw-qr-image {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  margin: 0 auto 14px;
+  background: #ffffff;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #e4e4e7;
+}
+
+.cw-qr-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  max-width: 320px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.cw-qr-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.cw-qr-label {
+  color: #71717a;
+}
+
+.cw-qr-val {
+  font-weight: 700;
+  color: #09090b;
+}
+
+.cw-timer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 4px;
+  margin-top: 12px;
+}

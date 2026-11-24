@@ -7,7 +7,7 @@ const cacBuoc = [
   'Xác nhận và đặt hàng',
 ]
 
-export default function CaNhanHoa() {
+export default function CaNhanHoa({ onStartCustomizing }) {
   return (
     <section className="ca-nhan-hoa" id="ca-nhan-hoa">
       <div className="anh-ca-nhan-hoa">
@@ -36,10 +36,14 @@ export default function CaNhanHoa() {
           ))}
         </ol>
 
-        <a className="nut-ca-nhan-hoa" href="#san-pham">
+        <button
+          type="button"
+          className="nut-ca-nhan-hoa"
+          onClick={() => onStartCustomizing?.(1)}
+        >
           Bắt đầu thiết kế
           <ArrowRight />
-        </a>
+        </button>
       </div>
     </section>
   )

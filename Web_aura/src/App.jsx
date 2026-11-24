@@ -15,6 +15,10 @@ import AdminTemplates from './page/admin/AdminTemplates.jsx'
 import AdminProducts from './page/admin/AdminProducts.jsx'
 import AdminOrders from './page/admin/AdminOrders.jsx'
 import AdminCustomers from './page/admin/AdminCustomers.jsx'
+import AuthModal from './components/AuthModal/AuthModal.jsx'
+import ChiTietSanPham from './page/store/ChiTietSanPham.jsx'
+import CheckoutWizard from './page/store/CheckoutWizard.jsx'
+import LichSuDonHang from './page/store/LichSuDonHang.jsx'
 
 import './App.css'
 
@@ -34,24 +38,38 @@ export default function App() {
 
   // Trạng thái đăng nhập & điều hướng màn hình
   const [currentUser, setCurrentUser] = useState(getSavedUser)
-  const [view, setView] = useState('store') // 'store' | 'login' | 'admin'
+  const [view, setView] = useState('store') // 'store' | 'product-detail' | 'login' | 'admin'
+  const [selectedProductId, setSelectedProductId] = useState(1)
   const [adminTab, setAdminTab] = useState('dashboard')
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
 
   const themVaoGio = (sanPham) => {
     setGioHang((danhSachHienTai) => {
-      const sanPhamDaCo = danhSachHienTai.find(
-        (item) => item.id === sanPham.id,
-      )
+      const id = sanPham.id || `${sanPham.productId || 'sp'}-${sanPham.variantId || 'var'}-${Date.now()}`
+      const sanPhamDaCo = danhSachHienTai.find((item) => item.id === id)
+
+      const newItem = {
+        id,
+        ten: sanPham.name || sanPham.ten || 'Áo thun AURA',
+        gia: Number(sanPham.price || sanPham.gia || 0),
+        soLuong: Number(sanPham.quantity || sanPham.soLuong || 1),
+        anh: sanPham.printImage || sanPham.productImage || sanPham.anh || '/img/sp1.png',
+        size: sanPham.size || null,
+        color: sanPham.color || null,
+        printTemplate: sanPham.printTemplate || null,
+        printLocation: sanPham.printLocation || null,
+        hasPrint: Boolean(sanPham.hasPrint),
+      }
 
       if (sanPhamDaCo) {
         return danhSachHienTai.map((item) =>
-          item.id === sanPham.id
-            ? { ...item, soLuong: item.soLuong + 1 }
+          item.id === id
+            ? { ...item, soLuong: item.soLuong + (sanPham.quantity || 1) }
             : item,
         )
       }
 
-      return [...danhSachHienTai, { ...sanPham, soLuong: 1 }]
+      return [...danhSachHienTai, newItem]
     })
 
     setDangMoGioHang(true)
@@ -128,21 +146,72 @@ export default function App() {
         soLuong={tongSoLuong}
         moGioHang={() => setDangMoGioHang(true)}
         currentUser={currentUser}
-        onOpenLogin={() => setView('login')}
+        onOpenLogin={() => setIsAuthModalOpen(true)}
         onOpenAdmin={(tab = 'dashboard') => {
           setView('admin')
           setAdminTab(tab)
         }}
+        onChonMucTaiKhoan={(muc) => {
+          if (muc === 'don-hang') {
+            setView('my-orders')
+          } else if (muc === 'thiet-ke-png') {
+            setSelectedProductId(1)
+            setView('product-detail')
+          }
+        }}
         onLogout={handleLogout}
       />
 
-      <main>
-        <Banner />
-        <DanhMuc />
-        <SanPhamTieuBieu themVaoGio={themVaoGio} />
-        <CaNhanHoa />
-        <ChinhSach />
-      </main>
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={handleLoginSuccess}
+      />
+
+      {view === 'checkout' ? (
+        <CheckoutWizard
+          cartItems={gioHang}
+          onUpdateCart={setGioHang}
+          onBackToStore={() => setView('store')}
+          currentUser={currentUser}
+          onViewOrders={() => setView('my-orders')}
+        />
+      ) : view === 'my-orders' ? (
+        <LichSuDonHang
+          currentUser={currentUser}
+          onBackToStore={() => setView('store')}
+          onOpenLogin={() => setIsAuthModalOpen(true)}
+        />
+      ) : view === 'product-detail' ? (
+        <ChiTietSanPham
+          productId={selectedProductId}
+          onBackToStore={() => setView('store')}
+          onAddToCart={themVaoGio}
+          onBuyNow={() => {
+            setDangMoGioHang(false)
+            setView('checkout')
+          }}
+        />
+      ) : (
+        <main>
+          <Banner />
+          <DanhMuc />
+          <SanPhamTieuBieu
+            themVaoGio={themVaoGio}
+            onSelectProduct={(id) => {
+              setSelectedProductId(id)
+              setView('product-detail')
+            }}
+          />
+          <CaNhanHoa
+            onStartCustomizing={(id = 1) => {
+              setSelectedProductId(id)
+              setView('product-detail')
+            }}
+          />
+          <ChinhSach />
+        </main>
+      )}
 
       <ChanTrang />
 
@@ -151,6 +220,10 @@ export default function App() {
         dangMo={dangMoGioHang}
         dongGioHang={() => setDangMoGioHang(false)}
         xoaKhoiGio={xoaKhoiGio}
+        onOpenCheckout={() => {
+          setDangMoGioHang(false)
+          setView('checkout')
+        }}
       />
     </>
   )

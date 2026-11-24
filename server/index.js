@@ -10,6 +10,7 @@ const productsRoutes = require('./routes/products.routes');
 const categoriesRoutes = require('./routes/categories.routes');
 const templatesRoutes = require('./routes/templates.routes');
 const customersRoutes = require('./routes/customers.routes');
+const storeRoutes = require('./routes/store.routes');
 
 
 const app = express();
@@ -27,7 +28,9 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Các phân hệ Admin hiện có
+// Các phân hệ API
+app.use('/api/auth', authRoutes);
+app.use('/api/store', storeRoutes);
 app.use('/api/admin', authRoutes);
 app.use('/api/admin/dashboard', dashboardRoutes);
 app.use('/api/admin/orders', ordersRoutes);

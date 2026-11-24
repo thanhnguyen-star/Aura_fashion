@@ -1,0 +1,472 @@
+/* ==========================================================================
+   AURA FASHION - CUSTOMER ORDER HISTORY (SCREENS 15-18 FIGMA)
+   Minimalist Brutalism Design System
+   ========================================================================== */
+
+.lsdh-shell {
+  min-height: 80vh;
+  background-color: #fafafa;
+  padding: 40px 16px 80px;
+  color: #09090b;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.lsdh-container {
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* Header & Breadcrumb */
+.lsdh-nav-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.lsdh-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid #e4e4e7;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #18181b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+}
+
+.lsdh-back-btn:hover {
+  background: #f4f4f5;
+  border-color: #09090b;
+}
+
+.lsdh-header-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.lsdh-header-sub {
+  font-size: 14px;
+  color: #71717a;
+  margin-bottom: 28px;
+}
+
+/* Filter Tabs */
+.lsdh-tabs-wrapper {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.lsdh-tab-btn {
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #71717a;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.lsdh-tab-btn:hover {
+  color: #09090b;
+}
+
+.lsdh-tab-btn.active {
+  color: #09090b;
+  border-bottom-color: #09090b;
+}
+
+/* Order Cards */
+.lsdh-orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lsdh-order-card {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: border-color 0.2s ease;
+}
+
+.lsdh-order-card:hover {
+  border-color: #a1a1aa;
+}
+
+.lsdh-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f4f4f5;
+  margin-bottom: 16px;
+}
+
+.lsdh-order-id-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lsdh-order-code {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  color: #09090b;
+}
+
+.lsdh-order-time {
+  font-size: 12px;
+  color: #71717a;
+}
+
+/* Status Badges */
+.lsdh-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lsdh-badge.CHO_XAC_NHAN {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.lsdh-badge.DA_XAC_NHAN {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.lsdh-badge.DANG_GIAO {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.lsdh-badge.DA_GIAO {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.lsdh-badge.HUY {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Card Items List */
+.lsdh-items-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lsdh-item-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.lsdh-item-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e4e4e7;
+  background: #f4f4f5;
+  flex-shrink: 0;
+}
+
+.lsdh-item-info {
+  flex: 1;
+}
+
+.lsdh-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.lsdh-item-meta {
+  font-size: 12px;
+  color: #71717a;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.lsdh-print-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f4f4f5;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  color: #18181b;
+  margin-top: 4px;
+}
+
+.lsdh-item-price-qty {
+  text-align: right;
+  font-size: 13px;
+}
+
+.lsdh-item-price {
+  font-weight: 700;
+  color: #09090b;
+}
+
+.lsdh-item-qty {
+  font-size: 12px;
+  color: #71717a;
+}
+
+/* Card Footer */
+.lsdh-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16px;
+  border-top: 1px solid #f4f4f5;
+  margin-top: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.lsdh-total-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.lsdh-total-label {
+  font-size: 13px;
+  color: #71717a;
+}
+
+.lsdh-total-amount {
+  font-size: 17px;
+  font-weight: 800;
+  color: #09090b;
+}
+
+.lsdh-actions-group {
+  display: flex;
+  gap: 10px;
+}
+
+.lsdh-btn-outline {
+  background: transparent;
+  border: 1px solid #e4e4e7;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #18181b;
+}
+
+.lsdh-btn-outline:hover {
+  background: #f4f4f5;
+  border-color: #09090b;
+}
+
+.lsdh-btn-cancel {
+  background: transparent;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.lsdh-btn-cancel:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+
+/* Empty State (Screen 18 Figma) */
+.lsdh-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: #ffffff;
+  border: 1px dashed #d4d4d8;
+  border-radius: 8px;
+}
+
+.lsdh-empty-icon {
+  width: 56px;
+  height: 56px;
+  color: #a1a1aa;
+  margin: 0 auto 16px;
+}
+
+.lsdh-empty-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #09090b;
+}
+
+.lsdh-empty-desc {
+  font-size: 14px;
+  color: #71717a;
+  max-width: 400px;
+  margin: 0 auto 24px;
+}
+
+.lsdh-empty-btn {
+  background: #09090b;
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.lsdh-empty-btn:hover {
+  opacity: 0.85;
+}
+
+/* Modal Chi Tiết & Modal Hủy */
+.lsdh-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.lsdh-modal-box {
+  background: #ffffff;
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  border-radius: 8px;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  position: relative;
+}
+
+.lsdh-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e4e4e7;
+  margin-bottom: 20px;
+}
+
+.lsdh-modal-close {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #71717a;
+  padding: 4px;
+}
+
+.lsdh-modal-close:hover {
+  color: #09090b;
+}
+
+/* Timeline */
+.lsdh-timeline {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  margin: 24px 0 32px;
+  padding: 0 16px;
+}
+
+.lsdh-timeline::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  left: 36px;
+  right: 36px;
+  height: 2px;
+  background: #e4e4e7;
+  z-index: 1;
+}
+
+.lsdh-timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 2;
+  gap: 8px;
+}
+
+.lsdh-step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f4f4f5;
+  border: 2px solid #e4e4e7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #71717a;
+}
+
+.lsdh-timeline-step.active .lsdh-step-dot {
+  background: #09090b;
+  border-color: #09090b;
+  color: #ffffff;
+}
+
+.lsdh-timeline-step.completed .lsdh-step-dot {
+  background: #166534;
+  border-color: #166534;
+  color: #ffffff;
+}
+
+.lsdh-step-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #71717a;
+  white-space: nowrap;
+}
+
+.lsdh-timeline-step.active .lsdh-step-label {
+  color: #09090b;
+  font-weight: 700;
+}
