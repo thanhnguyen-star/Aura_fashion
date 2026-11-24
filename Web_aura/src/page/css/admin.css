@@ -57,6 +57,13 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s ease;
+}
+
+.aura-brand-left:hover {
+  opacity: 0.85;
 }
 
 .aura-logo-text {
@@ -65,6 +72,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.14em;
   color: #111111;
+  cursor: pointer;
 }
 
 .aura-console-badge {

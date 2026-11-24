@@ -9,6 +9,7 @@ const ordersRoutes = require('./routes/orders.routes');
 const productsRoutes = require('./routes/products.routes');
 const categoriesRoutes = require('./routes/categories.routes');
 const templatesRoutes = require('./routes/templates.routes');
+const customersRoutes = require('./routes/customers.routes');
 
 
 const app = express();
@@ -33,10 +34,7 @@ app.use('/api/admin/orders', ordersRoutes);
 app.use('/api/admin/products', productsRoutes);
 app.use('/api/admin/categories', categoriesRoutes);
 app.use('/api/admin/templates', templatesRoutes);
-
-
-// app.use('/api/admin/templates', require('./routes/templates.routes'));
-// app.use('/api/admin/customers', require('./routes/customers.routes'));
+app.use('/api/admin/customers', customersRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

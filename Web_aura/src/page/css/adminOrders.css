@@ -1,0 +1,557 @@
+/* ===== ADMIN ORDERS STYLING (SCREEN 23 FIGMA) ===== */
+
+.ao-shell {
+  padding: 0;
+}
+
+.ao-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.ao-eyebrow {
+  margin: 0 0 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #71717a;
+  text-transform: uppercase;
+}
+
+.ao-title {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: #09090b;
+  letter-spacing: -0.02em;
+}
+
+.ao-subtitle {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: #71717a;
+}
+
+.ao-header-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ao-stat-card {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  padding: 10px 18px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ao-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #71717a;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.ao-stat-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: #09090b;
+}
+
+/* Tabs & Filter Bar */
+.ao-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.ao-tabs {
+  display: inline-flex;
+  background: #f4f4f5;
+  padding: 4px;
+  border-radius: 6px;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.ao-tab-btn {
+  border: none;
+  background: transparent;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #52525b;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.ao-tab-btn.active {
+  background: #09090b;
+  color: #ffffff;
+}
+
+.ao-tab-badge {
+  background: #e4e4e7;
+  color: #18181b;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.ao-tab-btn.active .ao-tab-badge {
+  background: #27272a;
+  color: #fafafa;
+}
+
+.ao-search-wrap {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  padding: 6px 12px;
+  gap: 8px;
+  width: 280px;
+}
+
+.ao-search-input {
+  border: none;
+  outline: none;
+  font-size: 13px;
+  width: 100%;
+}
+
+/* Orders Table */
+.ao-table-container {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.ao-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.ao-table th {
+  background: #fcfcfc;
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.ao-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #f4f4f5;
+  color: #18181b;
+  vertical-align: middle;
+}
+
+.ao-table tr:hover td {
+  background: #fafafa;
+}
+
+.ao-code-badge {
+  font-family: monospace;
+  font-weight: 700;
+  background: #f4f4f5;
+  color: #09090b;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.ao-cust-name {
+  font-weight: 600;
+  color: #09090b;
+}
+
+.ao-cust-sub {
+  font-size: 11.5px;
+  color: #71717a;
+  margin-top: 2px;
+}
+
+.ao-price {
+  font-weight: 700;
+  color: #09090b;
+}
+
+/* Status Badges */
+.ao-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ao-badge.CHO_XAC_NHAN {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.ao-badge.DA_XAC_NHAN {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.ao-badge.DANG_GIAO {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.ao-badge.DA_GIAO {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.ao-badge.HUY {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.ao-pay-paid {
+  color: #15803d;
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+.ao-pay-unpaid {
+  color: #b45309;
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+.ao-btn-view {
+  background: #09090b;
+  color: #ffffff;
+  border: none;
+  padding: 7px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.15s;
+}
+
+.ao-btn-view:hover {
+  opacity: 0.85;
+}
+
+/* Modal Chi Tiết Đơn Hàng */
+.ao-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 20px;
+}
+
+.ao-modal {
+  background: #ffffff;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 880px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: aoModalFadeIn 0.2s ease-out;
+}
+
+@keyframes aoModalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ao-modal-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #e4e4e7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fafafa;
+}
+
+.ao-modal-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #09090b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ao-modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #71717a;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.ao-modal-close:hover {
+  background: #e4e4e7;
+  color: #09090b;
+}
+
+.ao-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Grid Thông Tin Nhận Hàng & Trạng Thái */
+.ao-info-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 20px;
+  background: #fafafa;
+  border: 1px solid #f4f4f5;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.ao-info-col h4 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #71717a;
+  letter-spacing: 0.05em;
+}
+
+.ao-info-row {
+  display: flex;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.ao-info-label {
+  width: 110px;
+  color: #71717a;
+}
+
+.ao-info-val {
+  color: #09090b;
+  font-weight: 500;
+  flex: 1;
+}
+
+.ao-status-control {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ao-select-status {
+  padding: 8px 12px;
+  border: 1px solid #d4d4d8;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #ffffff;
+  outline: none;
+}
+
+.ao-btn-pay {
+  border: 1px solid #10b981;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.ao-btn-pay:hover {
+  background: #10b981;
+  color: #ffffff;
+}
+
+/* KHU VỰC IN ẤN CHO XƯỞNG (ARTWORKS) */
+.ao-print-section {
+  border: 1px dashed #d4d4d8;
+  border-radius: 6px;
+  padding: 16px;
+  background: #fbfbfb;
+}
+
+.ao-print-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.ao-print-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #09090b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ao-artwork-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.ao-artwork-card {
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  padding: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.ao-artwork-preview {
+  width: 60px;
+  height: 60px;
+  background: #f4f4f5;
+  border-radius: 4px;
+  object-fit: contain;
+  border: 1px solid #e4e4e7;
+}
+
+.ao-artwork-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.ao-artwork-name {
+  font-weight: 600;
+  font-size: 12.5px;
+  color: #09090b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ao-artwork-tag {
+  display: inline-block;
+  font-size: 10.5px;
+  background: #f4f4f5;
+  color: #52525b;
+  padding: 2px 5px;
+  border-radius: 3px;
+  margin-top: 3px;
+}
+
+.ao-btn-download {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #09090b;
+  background: #f4f4f5;
+  border: 1px solid #d4d4d8;
+  padding: 5px 8px;
+  border-radius: 4px;
+  text-decoration: none;
+  margin-top: 6px;
+  cursor: pointer;
+}
+
+.ao-btn-download:hover {
+  background: #09090b;
+  color: #ffffff;
+  border-color: #09090b;
+}
+
+/* Danh Sách Món Đặt */
+.ao-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ao-items-table th {
+  background: #f4f4f5;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #71717a;
+  text-transform: uppercase;
+}
+
+.ao-items-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f4f4f5;
+}
+
+.ao-total-summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+.ao-total-final {
+  font-size: 16px;
+  font-weight: 700;
+  color: #09090b;
+}
+
+.ao-empty {
+  padding: 48px;
+  text-align: center;
+  color: #71717a;
+}

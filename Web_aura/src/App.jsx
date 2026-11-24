@@ -13,6 +13,8 @@ import AdminCategories from './page/admin/AdminCategories.jsx'
 import AdminTemplates from './page/admin/AdminTemplates.jsx'
 
 import AdminProducts from './page/admin/AdminProducts.jsx'
+import AdminOrders from './page/admin/AdminOrders.jsx'
+import AdminCustomers from './page/admin/AdminCustomers.jsx'
 
 import './App.css'
 
@@ -109,8 +111,10 @@ export default function App() {
         return <AdminCategories {...adminProps} />
       case 'print-templates':
         return <AdminTemplates {...adminProps} />
-      // case 'orders': return <AdminOrders {...adminProps} />
-      // case 'customers': return <AdminCustomers {...adminProps} />
+      case 'orders':
+        return <AdminOrders {...adminProps} />
+      case 'customers':
+        return <AdminCustomers {...adminProps} />
       case 'dashboard':
       default:
         return <AdminDashboard {...adminProps} />
@@ -125,7 +129,10 @@ export default function App() {
         moGioHang={() => setDangMoGioHang(true)}
         currentUser={currentUser}
         onOpenLogin={() => setView('login')}
-        onOpenAdmin={() => setView('admin')}
+        onOpenAdmin={(tab = 'dashboard') => {
+          setView('admin')
+          setAdminTab(tab)
+        }}
         onLogout={handleLogout}
       />
 

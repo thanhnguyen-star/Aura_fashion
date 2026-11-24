@@ -41,7 +41,12 @@ export default function AdminLayout({
     <div className="aura-admin-shell">
       <aside className="aura-sidebar">
         <div className="aura-sidebar-brand">
-          <div className="aura-brand-left">
+          <div
+            className="aura-brand-left"
+            onClick={onBackToStore}
+            style={{ cursor: 'pointer' }}
+            title="Về trang chủ cửa hàng"
+          >
             <span className="aura-logo-text">AURA</span>
             <span className="aura-console-badge">CONSOLE</span>
           </div>

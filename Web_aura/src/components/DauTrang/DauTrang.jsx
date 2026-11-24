@@ -145,56 +145,86 @@ export default function DauTrang({
                 </div>
 
                 <div className="danh-sach-tai-khoan">
-                  <button
-                    type="button"
-                    className="muc-tai-khoan"
-                    onClick={() =>
-                      chonMuc(() => onChonMucTaiKhoan?.('ho-so'))
-                    }
-                  >
-                    <span className="icon-muc-tai-khoan">
-                      <CircleUser size={18} strokeWidth={1.8} />
-                    </span>
-                    <span>Hồ sơ cá nhân</span>
-                  </button>
+                  {currentUser.vaiTro === 'QUAN_TRI' ? (
+                    <>
+                      <button
+                        type="button"
+                        className="muc-tai-khoan"
+                        onClick={() =>
+                          chonMuc(() => onOpenAdmin?.('customers'))
+                        }
+                      >
+                        <span className="icon-muc-tai-khoan">
+                          <CircleUser size={18} strokeWidth={1.8} />
+                        </span>
+                        <span>Hồ sơ khách hàng</span>
+                      </button>
 
-                  <button
-                    type="button"
-                    className="muc-tai-khoan"
-                    onClick={() =>
-                      chonMuc(() => onChonMucTaiKhoan?.('don-hang'))
-                    }
-                  >
-                    <span className="icon-muc-tai-khoan">
-                      <IconDonHang />
-                    </span>
-                    <span>Đơn hàng của tôi</span>
-                  </button>
+                      <button
+                        type="button"
+                        className="muc-tai-khoan"
+                        onClick={() =>
+                          chonMuc(() => onChonMucTaiKhoan?.('thiet-ke-png'))
+                        }
+                      >
+                        <span className="icon-muc-tai-khoan">
+                          <SlidersHorizontal size={18} strokeWidth={1.8} />
+                        </span>
+                        <span>Tùy chỉnh thiết kế PNG</span>
+                      </button>
 
-                  <button
-                    type="button"
-                    className="muc-tai-khoan"
-                    onClick={() =>
-                      chonMuc(() => onChonMucTaiKhoan?.('thiet-ke-png'))
-                    }
-                  >
-                    <span className="icon-muc-tai-khoan">
-                      <SlidersHorizontal size={18} strokeWidth={1.8} />
-                    </span>
-                    <span>Tùy chỉnh thiết kế PNG</span>
-                  </button>
+                      <button
+                        type="button"
+                        className="muc-tai-khoan muc-quan-tri"
+                        onClick={() => chonMuc(() => onOpenAdmin?.('dashboard'))}
+                      >
+                        <span className="icon-muc-tai-khoan">
+                          <LayoutGrid size={18} strokeWidth={1.8} />
+                        </span>
+                        <span>Vào trang quản trị</span>
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="muc-tai-khoan"
+                        onClick={() =>
+                          chonMuc(() => onChonMucTaiKhoan?.('ho-so'))
+                        }
+                      >
+                        <span className="icon-muc-tai-khoan">
+                          <CircleUser size={18} strokeWidth={1.8} />
+                        </span>
+                        <span>Hồ sơ của tôi</span>
+                      </button>
 
-                  {currentUser.vaiTro === 'QUAN_TRI' && (
-                    <button
-                      type="button"
-                      className="muc-tai-khoan muc-quan-tri"
-                      onClick={() => chonMuc(onOpenAdmin)}
-                    >
-                      <span className="icon-muc-tai-khoan">
-                        <LayoutGrid size={18} strokeWidth={1.8} />
-                      </span>
-                      <span>Vào trang quản trị</span>
-                    </button>
+                      <button
+                        type="button"
+                        className="muc-tai-khoan"
+                        onClick={() =>
+                          chonMuc(() => onChonMucTaiKhoan?.('don-hang'))
+                        }
+                      >
+                        <span className="icon-muc-tai-khoan">
+                          <IconDonHang />
+                        </span>
+                        <span>Đơn hàng của tôi</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        className="muc-tai-khoan"
+                        onClick={() =>
+                          chonMuc(() => onChonMucTaiKhoan?.('thiet-ke-png'))
+                        }
+                      >
+                        <span className="icon-muc-tai-khoan">
+                          <SlidersHorizontal size={18} strokeWidth={1.8} />
+                        </span>
+                        <span>Tùy chỉnh thiết kế PNG</span>
+                      </button>
+                    </>
                   )}
                 </div>
 
