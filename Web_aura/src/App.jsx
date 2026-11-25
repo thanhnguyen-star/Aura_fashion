@@ -160,6 +160,19 @@ export default function App() {
           }
         }}
         onLogout={handleLogout}
+        onNavigateStore={(hash) => {
+          setView('store')
+          setTimeout(() => {
+            if (!hash || hash === '#trang-chu') {
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+              return
+            }
+            const target = document.querySelector(hash)
+            if (target) {
+              target.scrollIntoView({ behavior: 'smooth' })
+            }
+          }, 50)
+        }}
       />
 
       <AuthModal

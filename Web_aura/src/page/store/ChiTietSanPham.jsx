@@ -28,12 +28,12 @@ export default function ChiTietSanPham({
   const [selectedSize, setSelectedSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
 
-  // Lựa chọn tùy biến in: Mẫu in lớn & Logo nhỏ (mặc định Ngực)
+  // Lựa chọn tùy biến in: Mẫu in lớn & Logo nhỏ (mặc định Tay áo khi có mẫu lớn)
   const [printConfig, setPrintConfig] = useState({
     hasBigPrint: true,
     bigTemplate: null,
     hasLogo: true,
-    logoLocation: 'NGUC', // 'KHONG_IN' | 'NGUC' | 'TAY_AO'
+    logoLocation: 'TAY_AO', // 'KHONG_IN' | 'NGUC' | 'TAY_AO'
     logoTemplate: null,
   });
 

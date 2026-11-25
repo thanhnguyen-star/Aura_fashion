@@ -46,6 +46,7 @@ export default function DauTrang({
   onOpenAdmin,
   onLogout,
   onChonMucTaiKhoan,
+  onNavigateStore,
 }) {
   const [dangMoMenu, setDangMoMenu] = useState(false)
   const [dangMoTaiKhoan, setDangMoTaiKhoan] = useState(false)
@@ -99,7 +100,14 @@ export default function DauTrang({
           {dangMoMenu ? <X /> : <Menu />}
         </button>
 
-        <a className="thuong-hieu" href="#trang-chu">
+        <a
+          className="thuong-hieu"
+          href="#trang-chu"
+          onClick={() => {
+            dongMenu()
+            onNavigateStore?.('#trang-chu')
+          }}
+        >
           AURA
         </a>
 
@@ -108,7 +116,10 @@ export default function DauTrang({
             <a
               key={item.duongDan}
               href={item.duongDan}
-              onClick={dongMenu}
+              onClick={() => {
+                dongMenu()
+                onNavigateStore?.(item.duongDan)
+              }}
             >
               {item.ten}
             </a>

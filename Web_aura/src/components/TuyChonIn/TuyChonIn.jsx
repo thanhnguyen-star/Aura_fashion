@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { Ban, Check } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Ban, Check, Lock, Info } from 'lucide-react';
 import './TuyChonIn.css';
 
 // SVG Áo Thun Tối Giản hỗ trợ đổi màu Hex động
@@ -108,13 +108,15 @@ export default function TuyChonIn({
     return DEFAULT_LOGO_TEMPLATES;
   }, [printTemplates]);
 
+  const [autoSwitchedToSleeve, setAutoSwitchedToSleeve] = useState(false);
+
   // Cấu hình hiện tại (dùng từ props hoặc fallback an toàn)
   const currentConfig = useMemo(() => {
     return {
       hasBigPrint: printConfig?.hasBigPrint ?? true,
       bigTemplate: printConfig?.bigTemplate ?? bigTemplates[0],
       hasLogo: printConfig?.hasLogo ?? true,
-      logoLocation: printConfig?.logoLocation ?? 'NGUC', // 'KHONG_IN' | 'NGUC' | 'TAY_AO'
+      logoLocation: printConfig?.logoLocation ?? 'TAY_AO', // 'KHONG_IN' | 'NGUC' | 'TAY_AO'
       logoTemplate: printConfig?.logoTemplate ?? logoTemplates[0],
     };
   }, [printConfig, bigTemplates, logoTemplates]);
@@ -185,14 +187,20 @@ export default function TuyChonIn({
     const { hasBigPrint, bigTemplate, logoLocation, logoTemplate } = currentConfig;
 
     const handleSelectBigTemplate = (tpl) => {
+      const wasChest = logoLocation === 'NGUC';
+      if (wasChest) {
+        setAutoSwitchedToSleeve(true);
+      }
       onPrintChange?.({
         ...currentConfig,
         hasBigPrint: true,
         bigTemplate: tpl,
+        logoLocation: wasChest ? 'TAY_AO' : logoLocation,
       });
     };
 
     const handleDisableBigPrint = () => {
+      setAutoSwitchedToSleeve(false);
       onPrintChange?.({
         ...currentConfig,
         hasBigPrint: false,
@@ -200,6 +208,8 @@ export default function TuyChonIn({
     };
 
     const handleSelectLogoLocation = (loc) => {
+      if (loc === 'NGUC' && hasBigPrint) return;
+      setAutoSwitchedToSleeve(false);
       onPrintChange?.({
         ...currentConfig,
         logoLocation: loc,
@@ -303,20 +313,28 @@ export default function TuyChonIn({
               <span className="tci-opt-name">Không in</span>
             </div>
 
-            {/* Vị trí Ngực */}
+            {/* Vị trí Ngực (khóa khi đã chọn mẫu lớn) */}
             <div
-              className={`tci-opt-card ${logoLocation === 'NGUC' ? 'active' : ''}`}
+              className={`tci-opt-card ${logoLocation === 'NGUC' ? 'active' : ''} ${
+                hasBigPrint ? 'disabled' : ''
+              }`}
               onClick={() => handleSelectLogoLocation('NGUC')}
+              title={hasBigPrint ? 'Không khả dụng khi đã chọn mẫu lớn' : 'Ngực'}
             >
-              {logoLocation === 'NGUC' && (
+              {logoLocation === 'NGUC' && !hasBigPrint && (
                 <div className="tci-check-badge">
                   <Check size={10} strokeWidth={3} />
                 </div>
               )}
               <div className="tci-opt-icon">
-                <ChestPositionIcon />
+                {hasBigPrint ? <Lock size={16} /> : <ChestPositionIcon />}
               </div>
               <span className="tci-opt-name">Ngực</span>
+              {hasBigPrint && (
+                <span className="tci-opt-disabled-hint">
+                  Không khả dụng khi đã chọn mẫu lớn
+                </span>
+              )}
             </div>
 
             {/* Vị trí Tay áo */}
@@ -335,6 +353,12 @@ export default function TuyChonIn({
               <span className="tci-opt-name">Tay áo</span>
             </div>
           </div>
+
+          {autoSwitchedToSleeve && hasBigPrint && (
+            <p className="tci-auto-switch-note">
+              Đã chuyển logo sang tay áo để không chồng lên mẫu lớn.
+            </p>
+          )}
         </div>
 
         {/* ——— CHỌN LOGO (khi vị trí khác "Không in") ——— */}
@@ -368,6 +392,12 @@ export default function TuyChonIn({
                 );
               })}
             </div>
+            {hasBigPrint && (
+              <p className="tci-info-note">
+                <Info size={13} />
+                <span>Khi đã chọn mẫu lớn, logo nhỏ chỉ đặt được ở tay áo.</span>
+              </p>
+            )}
           </div>
         )}
       </div>
