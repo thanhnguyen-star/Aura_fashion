@@ -61,11 +61,11 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'l
         mode === 'login'
           ? { email: formData.email, password: formData.password }
           : {
-              hoTen: formData.hoTen,
-              email: formData.email,
-              soDienThoai: formData.soDienThoai,
-              password: formData.password,
-            };
+            hoTen: formData.hoTen,
+            email: formData.email,
+            soDienThoai: formData.soDienThoai,
+            password: formData.password,
+          };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -165,7 +165,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'l
             </div>
           )}
 
-          {/* Biến thể 2 (Screen 4 Figma): Tài khoản bị khóa (Banner đỏ nguy hiểm) */}
+
           {isAccountLocked && (
             <div className="auth-alert-locked">
               <ShieldAlert size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
@@ -176,7 +176,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'l
             </div>
           )}
 
-          {/* Biến thể 1 (Screen 4 Figma): Lỗi thông tin đăng nhập */}
+
           {!isAccountLocked && errorMessage && (
             <div className="auth-alert-error">
               <AlertCircle size={16} style={{ flexShrink: 0 }} />
@@ -255,7 +255,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, initialMode = 'l
               </div>
             )}
 
-            {/* Biến thể 3 (Screen 4 Figma): Loading button state */}
+
             <button type="submit" className="auth-submit-btn" disabled={loading}>
               {loading ? (
                 <>

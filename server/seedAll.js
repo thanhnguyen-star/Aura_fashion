@@ -117,8 +117,20 @@ async function seedAll() {
         phone: '0988.777.666',
         pass: userPass,
         role: 'KHACH_HANG',
-        locked: 1, // Tài khoản bị khóa để test Screen 4 biến thể 2
+        locked: 1, // Tài khoản bị khóa 
       },
+      {
+        id: 5,
+        name: 'Thanh',
+        email: 'thanh123@gmail.com',
+        phone: '123456789',
+        pass: userPass,
+        role: 'KHACH_HANG',
+        locked: 0, // Tài khoản bị khóa 
+      },
+
+
+
     ];
 
     for (const acc of accounts) {
@@ -127,6 +139,7 @@ async function seedAll() {
          VALUES (?, ?, ?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE
             HoTen = VALUES(HoTen),
+            Email = VALUES(Email),
             SoDienThoai = VALUES(SoDienThoai),
             MatKhauBam = VALUES(MatKhauBam),
             VaiTro = VALUES(VaiTro),
@@ -238,11 +251,40 @@ async function seedAll() {
       );
     }
 
-    // 9. CHI TIẾT ĐƠN HÀNG (chitietdonhang) & MẪU IN ĐƠN HÀNG (mauindonhang)
-    console.log('9. Đang nạp Chi Tiết Đơn Hàng cho các đơn mẫu...');
-    // Đơn 1: MaDonHang = 1 (#AURA-ORD-8821), TienHang = 1390000, PhiGiaoHang = 30000
-    // Item 1: 2 cái SP-001 M Đen (320k * 2 = 640k)
-    // Item 2: 1 cái SP-002 L Đen (750k * 1 = 750k) -> Tổng = 1390k
+    // 9. ĐƠN HÀNG MẪU (donhang), CHI TIẾT ĐƠN HÀNG & MẪU IN ĐƠN HÀNG
+    console.log('9. Đang nạp Đơn Hàng mẫu, Chi Tiết Đơn Hàng & Snapshot In Ấn...');
+    await conn.query(
+      `INSERT INTO donhang (MaDonHang, MaHienThi, MaTaiKhoan, MaYeuCau, TenNguoiNhan, DienThoaiNhan, DiaChiGiao, TienHang, PhiGiaoHang, PhuongThuc, TrangThaiThanhToan, TrangThai)
+       VALUES
+       (1, '#AURA-ORD-8821', 2, 'REQ-8821', 'Nguyễn Hoàng Sơn', '0918.420.899', 'Q.1, TP.HCM', 1390000, 30000, 'COD', 'CHUA_THANH_TOAN', 'CHO_XAC_NHAN'),
+       (2, '#AURA-ORD-8820', 3, 'REQ-8820', 'Trần Thị Minh Trang', '0903.112.554', 'Q.3, TP.HCM', 650000, 30000, 'QR', 'DA_THANH_TOAN', 'CHO_XAC_NHAN')
+       ON DUPLICATE KEY UPDATE
+          TenNguoiNhan = VALUES(TenNguoiNhan),
+          TienHang = VALUES(TienHang)`
+    );
+
+    // Đảm bảo có ít nhất 1 mẫu lớn & 1 logo trong MauIn (trường hợp chưa chạy seedTemplates.js)
+    const [existingTemplates] = await conn.query('SELECT MaMauIn, LoaiMau FROM mauin');
+    let bigTemplateId = existingTemplates.find((t) => t.LoaiMau === 'MAU_LON')?.MaMauIn;
+    let logoTemplateId = existingTemplates.find((t) => t.LoaiMau === 'LOGO')?.MaMauIn;
+
+    if (!bigTemplateId) {
+      const [resBig] = await conn.query(
+        `INSERT INTO mauin (TenMauIn, DuongDanPNG, LoaiMau, HienThi, NhanKieuIn, ViTriChoPhep, KichThuocPx, DungLuongBytes)
+         VALUES ('Pop Art Sunglasses', '/img/big/to.png', 'MAU_LON', 1, 'A3 FRONT', '["A3 FRONT","BACK PRINT"]', '2400 × 3000 px · 300 DPI', 524288)`
+      );
+      bigTemplateId = resBig.insertId;
+    }
+
+    if (!logoTemplateId) {
+      const [resLogo] = await conn.query(
+        `INSERT INTO mauin (TenMauIn, DuongDanPNG, LoaiMau, HienThi, NhanKieuIn, ViTriChoPhep, KichThuocPx, DungLuongBytes)
+         VALUES ('AURA Monogram AR', '/img/logo/logo1.png', 'LOGO', 1, 'NGỰC TRÁI', '["Ngực trái","Tay áo trái","Gáy cổ sau"]', '1000 × 1000 px · 300 DPI', 120000)`
+      );
+      logoTemplateId = resLogo.insertId;
+    }
+
+    // Đơn 1: MaDonHang = 1 (#AURA-ORD-8821)
     await conn.query(
       `INSERT INTO chitietdonhang (MaDongDon, MaDonHang, MaBienThe, TenSanPhamLucMua, SKULucMua, KichThuocLucMua, MauSacLucMua, DonGia, SoLuong)
        VALUES
@@ -254,19 +296,16 @@ async function seedAll() {
           SoLuong = VALUES(SoLuong)`
     );
 
-    // Mẫu in đơn hàng cho Đơn 1:
-    // Item 1 in mẫu lớn A3 (MaMauIn = 11: Pop Art Sunglasses, MaViTriIn = 1)
-    // Item 2 in Logo ngực trái (MaMauIn = 18: AURA Monogram AR, MaViTriIn = 2)
     await conn.query(
       `INSERT INTO mauindonhang (MaDongDon, MaViTriIn, MaMauIn)
        VALUES
-       (1, 1, 11),
-       (2, 2, 18)
-       ON DUPLICATE KEY UPDATE MaMauIn = VALUES(MaMauIn)`
+       (1, 1, ?),
+       (2, 2, ?)
+       ON DUPLICATE KEY UPDATE MaMauIn = VALUES(MaMauIn)`,
+      [bigTemplateId, logoTemplateId]
     );
 
-    // Đơn 2: MaDonHang = 2 (#AURA-ORD-8820), TienHang = 650000, PhiGiaoHang = 30000
-    // Item 3: 2 cái SP-001 M Trắng (325k * 2 = 650k)
+    // Đơn 2: MaDonHang = 2 (#AURA-ORD-8820)
     await conn.query(
       `INSERT INTO chitietdonhang (MaDongDon, MaDonHang, MaBienThe, TenSanPhamLucMua, SKULucMua, KichThuocLucMua, MauSacLucMua, DonGia, SoLuong)
        VALUES
@@ -277,13 +316,12 @@ async function seedAll() {
           SoLuong = VALUES(SoLuong)`
     );
 
-    // Mẫu in đơn hàng cho Đơn 2:
-    // Item 3 in mẫu A3 Front (MaMauIn = 14: CONTROL BEAR Chenille, MaViTriIn = 1)
     await conn.query(
       `INSERT INTO mauindonhang (MaDongDon, MaViTriIn, MaMauIn)
        VALUES
-       (3, 1, 14)
-       ON DUPLICATE KEY UPDATE MaMauIn = VALUES(MaMauIn)`
+       (3, 1, ?)
+       ON DUPLICATE KEY UPDATE MaMauIn = VALUES(MaMauIn)`,
+      [bigTemplateId]
     );
 
     await conn.commit();
