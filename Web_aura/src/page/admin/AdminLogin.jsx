@@ -9,6 +9,7 @@ import {
   Lock,
   Check,
 } from 'lucide-react';
+import { saveAuthSession } from '../../utils/api';
 import '../css/adminLogin.css';
 
 const API_BASE = 'http://localhost:5000';
@@ -18,6 +19,7 @@ export default function AdminLogin({
   onBackToStore,
   onOpenRegister,
   successMessage = '',
+  sessionNotice = '',
   soLuong = 0,
 }) {
   const [email, setEmail] = useState('');
@@ -83,8 +85,7 @@ export default function AdminLogin({
         return;
       }
 
-      localStorage.setItem('aura_admin_token', data.token);
-      localStorage.setItem('aura_admin_user', JSON.stringify(data.admin));
+      saveAuthSession(data.token, data.admin);
       onLoginSuccess?.(data.admin, data.token);
     } catch {
       setServerError('Không thể kết nối máy chủ API. Vui lòng kiểm tra server.');
@@ -156,7 +157,7 @@ export default function AdminLogin({
             Đăng nhập để xem đơn hàng và mua sắm
           </p>
 
-          <form onSubmit={handleSubmit} noValidate>
+          <form onSubmit={handleSubmit} noValidate autoComplete="off">
             {/* Thông báo khi vừa đăng ký xong */}
             {successMessage && (
               <div className="aura-alert aura-alert-success">
@@ -174,6 +175,17 @@ export default function AdminLogin({
                   Vui lòng liên hệ bộ phận hỗ trợ khách hàng{' '}
                   <strong>care@aura.vn</strong> để được mở khóa.
                 </div>
+              </div>
+            )}
+
+            {/* Thông báo khi phiên đăng nhập hết hạn hoặc server vừa khởi động lại */}
+            {sessionNotice && !serverError && (
+              <div className="aura-alert aura-alert-error">
+                <AlertCircle
+                  size={16}
+                  style={{ flexShrink: 0, marginTop: '2px' }}
+                />
+                <span>{sessionNotice}</span>
               </div>
             )}
 
@@ -197,10 +209,11 @@ export default function AdminLogin({
                 <input
                   id="login-email"
                   type="email"
+                  autoComplete="off"
                   className={`aura-input ${
                     inlineErrors.email ? 'aura-input-error' : ''
                   }`}
-                  placeholder="name@example.com"
+                  placeholder="Nhập email"
                   value={email}
                   onChange={(e) => {
                     setEmail(e.target.value);
@@ -233,6 +246,7 @@ export default function AdminLogin({
                 <input
                   id="login-password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="off"
                   className={`aura-input aura-input-with-icon ${
                     hasPasswordError ? 'aura-input-error' : ''
                   }`}

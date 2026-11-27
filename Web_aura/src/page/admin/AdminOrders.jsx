@@ -49,8 +49,14 @@ function formatDate(dateStr) {
   });
 }
 
-export default function AdminOrders({ adminUser, onNavigate, onLogout, onBackToStore }) {
-  const [activeTab, setActiveTab] = useState('all');
+export default function AdminOrders({
+  adminUser,
+  onNavigate,
+  onLogout,
+  onBackToStore,
+  initialStatus = 'all',
+}) {
+  const [activeTab, setActiveTab] = useState(initialStatus);
   const [search, setSearch] = useState('');
   const [orders, setOrders] = useState([]);
   const [stats, setStats] = useState({

@@ -10,9 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emailjs/browser": "^5.0.3",
+    "firebase": "^13.4.0",
     "lucide-react": "^1.74.0",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1"
+    "react-dom": "^19.3.1",
+    "recharts": "^3.11.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

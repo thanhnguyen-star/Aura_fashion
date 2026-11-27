@@ -272,3 +272,122 @@
 .muc-dang-xuat:hover {
   background-color: #fef2f2;
 }
+
+/* User Chip & Avatar trên Navbar */
+.nut-tai-khoan.da-dang-nhap {
+  width: auto;
+  min-width: 40px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+}
+
+.nut-tai-khoan.da-dang-nhap:hover {
+  background-color: #e5e7eb;
+}
+
+.navbar-user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.navbar-avatar-img {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid #111111;
+  display: block;
+}
+
+.navbar-avatar-initial {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: #111111;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-ten-nguoi-dung {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111111;
+  max-width: 110px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Dropdown User Header */
+.dropdown-user-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dropdown-avatar-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #111111;
+  flex-shrink: 0;
+}
+
+.dropdown-avatar-initial {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #111111;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dropdown-user-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.dropdown-user-name {
+  margin: 0 0 2px;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #111111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-user-role-badge {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  background-color: #111111;
+  color: #ffffff;
+  border-radius: 3px;
+  margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+  .navbar-ten-nguoi-dung {
+    display: none;
+  }
+  .nut-tai-khoan.da-dang-nhap {
+    padding: 4px;
+    border-radius: 50%;
+  }
+}

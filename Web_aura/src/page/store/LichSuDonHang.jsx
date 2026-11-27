@@ -12,6 +12,7 @@ import {
   Loader2,
   LogIn,
 } from 'lucide-react';
+import { getAuthToken, triggerUnauthorizedLogout } from '../../utils/api';
 import '../css/lichSuDonHang.css';
 
 const TABS = [
@@ -51,7 +52,7 @@ export default function LichSuDonHang({
   const [toastMessage, setToastMessage] = useState('');
 
   const fetchOrders = useCallback(async (tab) => {
-    const token = localStorage.getItem('aura_admin_token');
+    const token = getAuthToken();
     if (!token) {
       setLoading(false);
       return;
@@ -66,6 +67,10 @@ export default function LichSuDonHang({
       });
       const data = await res.json().catch(() => ({}));
 
+      if (res.status === 401) {
+        triggerUnauthorizedLogout(data.message);
+        return;
+      }
       if (!res.ok || !data.success) {
         throw new Error(data.message || 'Lỗi tải danh sách đơn hàng');
       }
@@ -92,13 +97,17 @@ export default function LichSuDonHang({
     try {
       setCancelLoading(true);
       setCancelError('');
-      const token = localStorage.getItem('aura_admin_token');
+      const token = getAuthToken();
       const res = await fetch(`http://localhost:5000/api/store/my-orders/${cancelingOrder.maDonHang}/cancel`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json().catch(() => ({}));
 
+      if (res.status === 401) {
+        triggerUnauthorizedLogout(data.message);
+        return;
+      }
       if (!res.ok || !data.success) {
         throw new Error(data.message || 'Không thể hủy đơn hàng');
       }

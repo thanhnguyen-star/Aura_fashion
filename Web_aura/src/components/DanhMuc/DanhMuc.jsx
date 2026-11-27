@@ -15,7 +15,12 @@ export default function DanhMuc({ onSelectCategory }) {
           <h2 id="tieu-de-danh-muc">Mua sắm theo danh mục</h2>
         </div>
 
-        <a href="#san-pham">Xem sản phẩm →</a>
+        <a
+          href="#san-pham"
+          onClick={() => onSelectCategory?.('ALL')}
+        >
+          Xem sản phẩm →
+        </a>
       </div>
 
       <div className="luoi-danh-muc">
@@ -24,6 +29,7 @@ export default function DanhMuc({ onSelectCategory }) {
             className="the-danh-muc"
             href={`#danh-muc-${danhMuc.slug}`}
             key={danhMuc.id}
+            onClick={() => onSelectCategory?.(danhMuc.id)}
             style={{ '--do-tre': `${viTri * 120}ms` }}
             onClick={(e) => {
               e.preventDefault()

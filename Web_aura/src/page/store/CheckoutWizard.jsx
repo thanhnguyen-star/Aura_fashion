@@ -11,6 +11,7 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react';
+import { getAuthToken, triggerUnauthorizedLogout } from '../../utils/api';
 import '../css/checkoutWizard.css';
 
 function formatCurrency(val) {
@@ -103,7 +104,7 @@ export default function CheckoutWizard({
     try {
       setSubmitting(true);
 
-      const token = localStorage.getItem('aura_admin_token');
+      const token = getAuthToken();
       const payload = {
         tenNguoiNhan: formData.tenNguoiNhan,
         dienThoaiNhan: formData.dienThoaiNhan,
@@ -134,6 +135,11 @@ export default function CheckoutWizard({
       });
 
       const data = await res.json().catch(() => ({}));
+
+      if (res.status === 401) {
+        triggerUnauthorizedLogout(data.message);
+        return;
+      }
 
       if (!res.ok || !data.success) {
         throw new Error(data.message || 'Không thể tạo đơn hàng');

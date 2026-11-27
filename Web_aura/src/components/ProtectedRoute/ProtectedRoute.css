@@ -1,0 +1,112 @@
+/* Style Brutalism cho Protected Route */
+.protected-route-container {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  background-color: #fcfcfc;
+}
+
+.protected-route-card {
+  max-width: 460px;
+  width: 100%;
+  background: #ffffff;
+  border: 2px solid #111111;
+  box-shadow: 6px 6px 0 #111111;
+  padding: 40px 32px;
+  text-align: center;
+}
+
+.protected-route-icon-box {
+  width: 68px;
+  height: 68px;
+  background-color: #fef2f2;
+  border: 2px solid #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.protected-route-icon {
+  color: #ef4444;
+}
+
+.protected-route-badge {
+  display: inline-block;
+  background: #111111;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 4px 10px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.protected-route-title {
+  font-size: 24px;
+  font-weight: 800;
+  color: #111111;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+}
+
+.protected-route-message {
+  font-size: 14.5px;
+  color: #555555;
+  line-height: 1.6;
+  margin: 0 0 28px;
+}
+
+.protected-route-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.protected-route-btn-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px 20px;
+  background-color: #111111;
+  color: #ffffff;
+  border: 2px solid #111111;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.protected-route-btn-login:hover {
+  background-color: #333333;
+  transform: translateY(-1px);
+}
+
+.protected-route-btn-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 20px;
+  background: #ffffff;
+  color: #111111;
+  border: 1.5px solid #d1d5db;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.protected-route-btn-back:hover {
+  border-color: #111111;
+  background-color: #f9fafb;
+}

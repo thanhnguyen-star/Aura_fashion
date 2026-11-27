@@ -47,6 +47,7 @@ export default function DauTrang({
   onLogout,
   onChonMucTaiKhoan,
   onNavigateStore,
+  onOpenSearch,
 }) {
   const [dangMoMenu, setDangMoMenu] = useState(false)
   const [dangMoTaiKhoan, setDangMoTaiKhoan] = useState(false)
@@ -130,7 +131,8 @@ export default function DauTrang({
           <button
             className="nut-bieu-tuong"
             type="button"
-            aria-label="Tìm kiếm"
+            onClick={onOpenSearch}
+            aria-label="Tìm kiếm sản phẩm"
           >
             <Search />
           </button>
@@ -138,21 +140,61 @@ export default function DauTrang({
           {/* Nút tài khoản + Dropdown */}
           <div className="hop-tai-khoan" ref={hopTaiKhoanRef}>
             <button
-              className="nut-bieu-tuong nut-tai-khoan"
+              className={`nut-bieu-tuong nut-tai-khoan ${currentUser ? 'da-dang-nhap' : ''}`}
               type="button"
               onClick={xuLyBamTaiKhoan}
               aria-label="Tài khoản"
               aria-expanded={dangMoTaiKhoan}
             >
-              <UserRound />
-              {currentUser && <span className="cham-dang-nhap" />}
+              {currentUser ? (
+                <span className="navbar-user-chip">
+                  {currentUser.avatar ? (
+                    <img
+                      src={currentUser.avatar}
+                      alt={currentUser.hoTen || 'Avatar'}
+                      className="navbar-avatar-img"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <span className="navbar-avatar-initial">
+                      {(currentUser.hoTen || currentUser.email || 'A').charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="navbar-ten-nguoi-dung">
+                    {currentUser.hoTen || currentUser.email?.split('@')[0]}
+                  </span>
+                </span>
+              ) : (
+                <UserRound size={20} />
+              )}
             </button>
 
             {dangMoTaiKhoan && currentUser && (
               <div className="menu-tai-khoan">
                 <div className="dau-menu-tai-khoan">
-                  <p className="nhan-tai-khoan">TÀI KHOẢN AURA</p>
-                  <p className="email-tai-khoan">{currentUser.email}</p>
+                  <div className="dropdown-user-header">
+                    {currentUser.avatar ? (
+                      <img
+                        src={currentUser.avatar}
+                        alt={currentUser.hoTen || 'Avatar'}
+                        className="dropdown-avatar-img"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="dropdown-avatar-initial">
+                        {(currentUser.hoTen || currentUser.email || 'A').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div className="dropdown-user-meta">
+                      <p className="dropdown-user-name">
+                        {currentUser.hoTen || 'Khách hàng AURA'}
+                      </p>
+                      <p className="email-tai-khoan">{currentUser.email}</p>
+                      <span className="dropdown-user-role-badge">
+                        {currentUser.vaiTro === 'QUAN_TRI' ? 'QUẢN TRỊ VIÊN' : 'HỘI VIÊN AURA'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="danh-sach-tai-khoan">

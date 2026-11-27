@@ -40,6 +40,33 @@ app.use('/api/admin/templates', templatesRoutes);
 app.use('/api/admin/customers', customersRoutes);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server đang chạy tại http://localhost:${PORT}`);
+
+async function startServer() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS otp_codes (
+      email VARCHAR(320) NOT NULL PRIMARY KEY,
+      code VARCHAR(6) NOT NULL,
+      attempts INT NOT NULL DEFAULT 0,
+      expires_at DATETIME NOT NULL,
+      INDEX idx_otp_codes_expires_at (expires_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+
+  const otpCleanupTimer = setInterval(async () => {
+    try {
+      await pool.query('DELETE FROM otp_codes WHERE expires_at < NOW()');
+    } catch (err) {
+      console.error('[index > OTP cleanup]', err.message);
+    }
+  }, 5 * 60 * 1000);
+  otpCleanupTimer.unref();
+
+  app.listen(PORT, () => {
+    console.log(`Server đang chạy tại http://localhost:${PORT}`);
+  });
+}
+
+startServer().catch((err) => {
+  console.error('[index > startup]', err.message);
+  process.exit(1);
 });

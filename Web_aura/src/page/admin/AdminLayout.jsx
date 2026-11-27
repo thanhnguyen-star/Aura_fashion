@@ -98,7 +98,7 @@ export default function AdminLayout({
                 {adminUser?.hoTen || 'Quản trị viên'}
               </span>
               <span className="aura-admin-email">
-                {adminUser?.email || 'aura.admin@aura-studio.vn'}
+                {adminUser?.email || ''}
               </span>
             </div>
           </div>

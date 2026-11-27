@@ -12,7 +12,7 @@ import {
     Sliders,
 } from 'lucide-react';
 import AdminLayout from './AdminLayout';
-import { adminFetch } from '../../utils/api';
+import { adminFetch, getAuthToken, triggerUnauthorizedLogout } from '../../utils/api';
 import '../css/adminTemplates.css';
 
 const API_BASE = 'http://localhost:5000';
@@ -176,7 +176,7 @@ export default function AdminTemplates({
             formData.append('viTriChoPhep', JSON.stringify(selectedPositions));
             formData.append('kichThuocPx', detectedPx || '3600 × 4800 px · 300 DPI');
 
-            const token = localStorage.getItem('aura_admin_token');
+            const token = getAuthToken();
             const res = await fetch(`${API_BASE}/api/admin/templates`, {
                 method: 'POST',
                 headers: { Authorization: `Bearer ${token}` },
@@ -184,6 +184,10 @@ export default function AdminTemplates({
             });
 
             const data = await res.json().catch(() => ({}));
+            if (res.status === 401) {
+                triggerUnauthorizedLogout(data.message);
+                return;
+            }
             if (!res.ok) {
                 throw new Error(data.message || 'Tải tệp thất bại');
             }

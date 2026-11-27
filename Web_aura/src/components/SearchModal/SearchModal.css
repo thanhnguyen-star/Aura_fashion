@@ -1,0 +1,187 @@
+/* ==========================================================================
+   AURA FASHION - REAL-TIME SEARCH MODAL
+   Minimalist Brutalism Design System
+   ========================================================================== */
+
+.aura-search-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 80px 16px 40px;
+  animation: auraFadeIn 0.2s ease-out;
+}
+
+@keyframes auraFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.aura-search-card {
+  width: 100%;
+  max-width: 640px;
+  background: #ffffff;
+  border: 1px solid #09090b;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+}
+
+/* Search Input Bar */
+.aura-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #e4e4e7;
+  background: #fafafa;
+}
+
+.aura-search-bar svg {
+  color: #71717a;
+  flex-shrink: 0;
+}
+
+.aura-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-size: 16px;
+  font-weight: 500;
+  color: #09090b;
+  outline: none;
+}
+
+.aura-search-input::placeholder {
+  color: #a1a1aa;
+}
+
+.aura-search-close-btn {
+  background: transparent;
+  border: none;
+  color: #71717a;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.aura-search-close-btn:hover {
+  color: #09090b;
+  background: #e4e4e7;
+}
+
+/* Results Container */
+.aura-search-results {
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aura-search-count {
+  font-size: 11px;
+  font-weight: 700;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 8px;
+}
+
+/* Result Row Item */
+.aura-search-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  color: #09090b;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border: 1px solid transparent;
+}
+
+.aura-search-item:hover {
+  background-color: #f4f4f5;
+  border-color: #e4e4e7;
+}
+
+.aura-search-thumb {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: #f4f4f5;
+  border: 1px solid #e4e4e7;
+  flex-shrink: 0;
+}
+
+.aura-search-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.aura-search-item-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aura-search-item-meta {
+  font-size: 12px;
+  color: #71717a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aura-search-item-tag {
+  background: #e4e4e7;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #18181b;
+}
+
+.aura-search-item-price {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #09090b;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Empty or Prompt States */
+.aura-search-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: #71717a;
+  font-size: 13.5px;
+}
+
+.aura-search-footer {
+  padding: 10px 18px;
+  background: #f4f4f5;
+  border-top: 1px solid #e4e4e7;
+  font-size: 11.5px;
+  color: #71717a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

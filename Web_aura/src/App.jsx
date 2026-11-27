@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useAuth } from './context/AuthContext.jsx'
+import { AUTH_UNAUTHORIZED_EVENT } from './utils/api.js'
 import Banner from './components/Banner/Banner.jsx'
 import CaNhanHoa from './components/CaNhanHoa/CaNhanHoa.jsx'
-import ChanTrang from './components/ChanTrang/ChanTrang.jsx'
-import ChinhSach from './components/ChinhSach/ChinhSach.jsx'
 import DanhMuc from './components/DanhMuc/DanhMuc.jsx'
 import DauTrang from './components/DauTrang/DauTrang.jsx'
 import GioHangMini from './components/GioHangMini/GioHangMini.jsx'
@@ -12,6 +12,7 @@ import AdminLogin from './page/admin/AdminLogin.jsx'
 import AdminCategories from './page/admin/AdminCategories.jsx'
 import AdminTemplates from './page/admin/AdminTemplates.jsx'
 
+
 import AdminProducts from './page/admin/AdminProducts.jsx'
 import AdminOrders from './page/admin/AdminOrders.jsx'
 import AdminCustomers from './page/admin/AdminCustomers.jsx'
@@ -20,30 +21,53 @@ import ChiTietSanPham from './page/store/ChiTietSanPham.jsx'
 import CheckoutWizard from './page/store/CheckoutWizard.jsx'
 import LichSuDonHang from './page/store/LichSuDonHang.jsx'
 import TrangDanhMuc from './page/store/TrangDanhMuc.jsx'
+import HoSoCaNhan from './page/store/HoSoCaNhan.jsx'
+import SearchModal from './components/SearchModal/SearchModal.jsx'
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute.jsx'
 
 import './App.css'
 
-function getSavedUser() {
-  try {
-    const token = localStorage.getItem('aura_admin_token')
-    const saved = localStorage.getItem('aura_admin_user')
-    return token && saved ? JSON.parse(saved) : null
-  } catch {
-    return null
-  }
-}
-
 export default function App() {
+  const { currentUser, setCurrentUser, logout } = useAuth()
   const [gioHang, setGioHang] = useState([])
   const [dangMoGioHang, setDangMoGioHang] = useState(false)
 
-  // Trạng thái đăng nhập & điều hướng màn hình
-  const [currentUser, setCurrentUser] = useState(getSavedUser)
-  const [view, setView] = useState('store') // 'store' | 'category' | 'product-detail' | 'login' | 'admin'
+  // Điều hướng màn hình
+  const [view, setView] = useState('store') // 'store' | 'category' | 'product-detail' | 'login' | 'admin' | 'checkout' | 'profile' | 'my-orders'
   const [selectedProductId, setSelectedProductId] = useState(1)
   const [selectedCategory, setSelectedCategory] = useState('nam')
+  const [featuredCategory, setFeaturedCategory] = useState('ALL')
   const [adminTab, setAdminTab] = useState('dashboard')
+  const [ordersInitialStatus, setOrdersInitialStatus] = useState('all')
+  const [ordersNavKey, setOrdersNavKey] = useState(0)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const [authModalKey, setAuthModalKey] = useState(0)
+  const [sessionNotice, setSessionNotice] = useState('')
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
+
+  const openLoginModal = (notice = '') => {
+    setSessionNotice(notice)
+    setAuthModalKey((prev) => prev + 1)
+    setIsAuthModalOpen(true)
+  }
+
+  useEffect(() => {
+    const handleUnauthorized = (e) => {
+      const msg = e.detail?.message || 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
+      setSessionNotice(msg)
+      setView((currentView) => {
+        if (currentView === 'admin') {
+          return 'login'
+        }
+        setAuthModalKey((prev) => prev + 1)
+        setIsAuthModalOpen(true)
+        return currentView
+      })
+    }
+
+    window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized)
+    return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized)
+  }, [])
 
   const themVaoGio = (sanPham) => {
     setGioHang((danhSachHienTai) => {
@@ -89,6 +113,7 @@ export default function App() {
   )
 
   const handleLoginSuccess = (user) => {
+    setSessionNotice('')
     setCurrentUser(user)
     if (user.vaiTro === 'QUAN_TRI') {
       setView('admin')
@@ -98,9 +123,8 @@ export default function App() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('aura_admin_token')
-    localStorage.removeItem('aura_admin_user')
-    setCurrentUser(null)
+    setSessionNotice('')
+    logout()
     setView('store')
   }
 
@@ -110,15 +134,24 @@ export default function App() {
       <AdminLogin
         onLoginSuccess={handleLoginSuccess}
         onBackToStore={() => setView('store')}
+        sessionNotice={sessionNotice}
       />
     )
   }
 
   // Màn hình Quản trị (chỉ mở khi đúng vai trò QUAN_TRI)
   if (view === 'admin' && currentUser?.vaiTro === 'QUAN_TRI') {
+    const handleAdminNavigate = (tab, options = {}) => {
+      if (tab === 'orders') {
+        setOrdersInitialStatus(options.status || 'all')
+        setOrdersNavKey((prev) => prev + 1)
+      }
+      setAdminTab(tab)
+    }
+
     const adminProps = {
       adminUser: currentUser,
-      onNavigate: setAdminTab,
+      onNavigate: handleAdminNavigate,
       onLogout: handleLogout,
       onBackToStore: () => setView('store'),
     }
@@ -132,7 +165,13 @@ export default function App() {
       case 'print-templates':
         return <AdminTemplates {...adminProps} />
       case 'orders':
-        return <AdminOrders {...adminProps} />
+        return (
+          <AdminOrders
+            key={ordersNavKey}
+            initialStatus={ordersInitialStatus}
+            {...adminProps}
+          />
+        )
       case 'customers':
         return <AdminCustomers {...adminProps} />
       case 'dashboard':
@@ -148,19 +187,22 @@ export default function App() {
         soLuong={tongSoLuong}
         moGioHang={() => setDangMoGioHang(true)}
         currentUser={currentUser}
-        onOpenLogin={() => setIsAuthModalOpen(true)}
+        onOpenLogin={() => openLoginModal('')}
         onOpenAdmin={(tab = 'dashboard') => {
           setView('admin')
           setAdminTab(tab)
         }}
         onChonMucTaiKhoan={(muc) => {
-          if (muc === 'don-hang') {
+          if (muc === 'ho-so') {
+            setView('profile')
+          } else if (muc === 'don-hang') {
             setView('my-orders')
           } else if (muc === 'thiet-ke-png') {
             setSelectedProductId(1)
             setView('product-detail')
           }
         }}
+        onOpenSearch={() => setIsSearchOpen(true)}
         onLogout={handleLogout}
         onNavigateStore={(hash) => {
           setView('store')
@@ -178,25 +220,41 @@ export default function App() {
       />
 
       <AuthModal
+        key={authModalKey}
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        onClose={() => {
+          setIsAuthModalOpen(false)
+          setSessionNotice('')
+        }}
         onSuccess={handleLoginSuccess}
+        sessionNotice={sessionNotice}
+      />
+
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSelectProduct={(id) => {
+          setSelectedProductId(id)
+          setView('product-detail')
+        }}
       />
 
       {view === 'checkout' ? (
-        <CheckoutWizard
-          cartItems={gioHang}
-          onUpdateCart={setGioHang}
-          onBackToStore={() => setView('store')}
+        <ProtectedRoute
           currentUser={currentUser}
-          onViewOrders={() => setView('my-orders')}
-        />
-      ) : view === 'my-orders' ? (
-        <LichSuDonHang
-          currentUser={currentUser}
+          onOpenLogin={() => openLoginModal('')}
           onBackToStore={() => setView('store')}
-          onOpenLogin={() => setIsAuthModalOpen(true)}
-        />
+          title="Thanh Toán Đơn Hàng"
+          message="Vui lòng đăng nhập hoặc liên kết Google để tiến hành đặt hàng và lưu lại đơn của bạn."
+        >
+          <CheckoutWizard
+            cartItems={gioHang}
+            onUpdateCart={setGioHang}
+            onBackToStore={() => setView('store')}
+            currentUser={currentUser}
+            onViewOrders={() => setView('my-orders')}
+          />
+        </ProtectedRoute>
       ) : view === 'category' ? (
         <TrangDanhMuc
           categorySlug={selectedCategory}
@@ -215,6 +273,34 @@ export default function App() {
           }}
           themVaoGio={themVaoGio}
         />
+      ) : view === 'my-orders' ? (
+        <ProtectedRoute
+          currentUser={currentUser}
+          onOpenLogin={() => openLoginModal('')}
+          onBackToStore={() => setView('store')}
+          title="Lịch Sử Đơn Hàng"
+          message="Vui lòng đăng nhập để xem lịch sử đặt hàng và trạng thái vận chuyển của bạn."
+        >
+          <LichSuDonHang
+            currentUser={currentUser}
+            onBackToStore={() => setView('store')}
+            onOpenLogin={() => openLoginModal('')}
+          />
+        </ProtectedRoute>
+      ) : view === 'profile' ? (
+        <ProtectedRoute
+          currentUser={currentUser}
+          onOpenLogin={() => openLoginModal('')}
+          onBackToStore={() => setView('store')}
+          title="Hồ Sơ Cá Nhân"
+          message="Vui lòng đăng nhập để xem và quản lý thông tin tài khoản của bạn."
+        >
+          <HoSoCaNhan
+            currentUser={currentUser}
+            onBackToStore={() => setView('store')}
+            onUpdateUser={(updated) => setCurrentUser(updated)}
+          />
+        </ProtectedRoute>
       ) : view === 'product-detail' ? (
         <ChiTietSanPham
           productId={selectedProductId}
@@ -237,6 +323,8 @@ export default function App() {
           />
           <SanPhamTieuBieu
             themVaoGio={themVaoGio}
+            activeCategory={featuredCategory}
+            onSelectCategory={setFeaturedCategory}
             onSelectProduct={(id) => {
               setSelectedProductId(id)
               setView('product-detail')
@@ -248,11 +336,8 @@ export default function App() {
               setView('product-detail')
             }}
           />
-          <ChinhSach />
         </main>
       )}
-
-      <ChanTrang />
 
       <GioHangMini
         danhSach={gioHang}
