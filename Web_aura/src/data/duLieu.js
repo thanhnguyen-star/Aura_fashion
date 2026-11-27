@@ -59,8 +59,7 @@ export const cauHinhTrangDanhMuc = {
     breadcrumb: 'THỜI TRANG NAM',
     tieuDe: 'THỜI TRANG NAM',
     moTa: 'Phong cách mạnh mẽ – Tự tin thể hiện bản thân',
-    anhBanner:
-      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=900&q=85',
+    anhBanner: '/img/nam/banner-nam.jpg',
     coKichCo: true,
     mucGia: [
       { id: 'all', label: 'Tất cả mức giá', min: 0, max: Infinity },
@@ -87,8 +86,7 @@ export const cauHinhTrangDanhMuc = {
     breadcrumb: 'THỜI TRANG NỮ',
     tieuDe: 'THỜI TRANG NỮ',
     moTa: 'Thanh lịch – Dịu dàng – Tỏa sáng theo cách riêng',
-    anhBanner:
-      'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=900&q=85',
+    anhBanner: '/img/nu/banner-nu.jpg',
     coKichCo: true,
     mucGia: [
       { id: 'all', label: 'Tất cả mức giá', min: 0, max: Infinity },
@@ -116,8 +114,7 @@ export const cauHinhTrangDanhMuc = {
     breadcrumb: 'PHỤ KIỆN',
     tieuDe: 'PHỤ KIỆN',
     moTa: 'Nhỏ gọn – Tinh tế – Hoàn thiện phong cách của bạn',
-    anhBanner:
-      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=85',
+    anhBanner: '/img/phu-kien/banner-phu-kien.jpg',
     coKichCo: false,
     mucGia: [
       { id: 'all', label: 'Tất cả mức giá', min: 0, max: Infinity },
