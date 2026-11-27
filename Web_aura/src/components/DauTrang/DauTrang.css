@@ -2,8 +2,8 @@
   position: sticky;
   top: 0;
   z-index: 20;
-  border-bottom: 1px solid rgba(222, 219, 213, 0.9);
-  background: rgba(250, 249, 247, 0.9);
+  border-bottom: 1px solid #dcd5c9;
+  background: rgba(237, 232, 223, 0.96);
   backdrop-filter: blur(16px);
 }
 

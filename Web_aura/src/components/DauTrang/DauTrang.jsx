@@ -14,7 +14,9 @@ import './DauTrang.css'
 
 const danhSachMenu = [
   { ten: 'Trang chủ', duongDan: '#trang-chu' },
-  { ten: 'Danh mục', duongDan: '#danh-muc' },
+  { ten: 'Nam', duongDan: '#danh-muc-nam', categorySlug: 'nam' },
+  { ten: 'Nữ', duongDan: '#danh-muc-nu', categorySlug: 'nu' },
+  { ten: 'Phụ kiện', duongDan: '#danh-muc-phu-kien', categorySlug: 'phu-kien' },
   { ten: 'Sản phẩm', duongDan: '#san-pham' },
   { ten: 'Cá nhân hóa', duongDan: '#ca-nhan-hoa' },
 ]
@@ -47,6 +49,7 @@ export default function DauTrang({
   onLogout,
   onChonMucTaiKhoan,
   onNavigateStore,
+  onSelectCategory,
   onOpenSearch,
 }) {
   const [dangMoMenu, setDangMoMenu] = useState(false)
@@ -117,8 +120,13 @@ export default function DauTrang({
             <a
               key={item.duongDan}
               href={item.duongDan}
-              onClick={() => {
+              onClick={(e) => {
                 dongMenu()
+                if (item.categorySlug) {
+                  e.preventDefault()
+                  onSelectCategory?.(item.categorySlug)
+                  return
+                }
                 onNavigateStore?.(item.duongDan)
               }}
             >

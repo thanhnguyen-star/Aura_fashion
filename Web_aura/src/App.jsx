@@ -204,6 +204,11 @@ export default function App() {
         }}
         onOpenSearch={() => setIsSearchOpen(true)}
         onLogout={handleLogout}
+        onSelectCategory={(slug) => {
+          setSelectedCategory(slug)
+          setView('category')
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }}
         onNavigateStore={(hash) => {
           setView('store')
           setTimeout(() => {
