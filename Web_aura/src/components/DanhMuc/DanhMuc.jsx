@@ -2,7 +2,7 @@ import { ArrowUpRight } from 'lucide-react'
 import { danhSachDanhMuc } from '../../data/duLieu.js'
 import './DanhMuc.css'
 
-export default function DanhMuc() {
+export default function DanhMuc({ onSelectCategory }) {
   return (
     <section
       className="phan-noi-dung khung-noi-dung"
@@ -22,9 +22,13 @@ export default function DanhMuc() {
         {danhSachDanhMuc.map((danhMuc, viTri) => (
           <a
             className="the-danh-muc"
-            href="#san-pham"
+            href={`#danh-muc-${danhMuc.slug}`}
             key={danhMuc.id}
             style={{ '--do-tre': `${viTri * 120}ms` }}
+            onClick={(e) => {
+              e.preventDefault()
+              onSelectCategory?.(danhMuc.slug)
+            }}
           >
             <div className="khung-anh-danh-muc">
               <img src={danhMuc.anh} alt={danhMuc.ten} />

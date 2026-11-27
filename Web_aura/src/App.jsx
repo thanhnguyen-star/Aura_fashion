@@ -19,6 +19,7 @@ import AuthModal from './components/AuthModal/AuthModal.jsx'
 import ChiTietSanPham from './page/store/ChiTietSanPham.jsx'
 import CheckoutWizard from './page/store/CheckoutWizard.jsx'
 import LichSuDonHang from './page/store/LichSuDonHang.jsx'
+import TrangDanhMuc from './page/store/TrangDanhMuc.jsx'
 
 import './App.css'
 
@@ -38,8 +39,9 @@ export default function App() {
 
   // Trạng thái đăng nhập & điều hướng màn hình
   const [currentUser, setCurrentUser] = useState(getSavedUser)
-  const [view, setView] = useState('store') // 'store' | 'product-detail' | 'login' | 'admin'
+  const [view, setView] = useState('store') // 'store' | 'category' | 'product-detail' | 'login' | 'admin'
   const [selectedProductId, setSelectedProductId] = useState(1)
+  const [selectedCategory, setSelectedCategory] = useState('nam')
   const [adminTab, setAdminTab] = useState('dashboard')
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
 
@@ -195,6 +197,24 @@ export default function App() {
           onBackToStore={() => setView('store')}
           onOpenLogin={() => setIsAuthModalOpen(true)}
         />
+      ) : view === 'category' ? (
+        <TrangDanhMuc
+          categorySlug={selectedCategory}
+          onChangeCategory={(slug) => {
+            setSelectedCategory(slug)
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }}
+          onBackToStore={() => {
+            setView('store')
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }}
+          onSelectProduct={(id) => {
+            setSelectedProductId(id)
+            setView('product-detail')
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+          }}
+          themVaoGio={themVaoGio}
+        />
       ) : view === 'product-detail' ? (
         <ChiTietSanPham
           productId={selectedProductId}
@@ -208,7 +228,13 @@ export default function App() {
       ) : (
         <main>
           <Banner />
-          <DanhMuc />
+          <DanhMuc
+            onSelectCategory={(slug) => {
+              setSelectedCategory(slug)
+              setView('category')
+              window.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+          />
           <SanPhamTieuBieu
             themVaoGio={themVaoGio}
             onSelectProduct={(id) => {
