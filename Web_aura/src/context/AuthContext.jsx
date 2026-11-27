@@ -109,8 +109,7 @@ export function AuthProvider({ children }) {
       if (!isFirebaseConfigured()) {
         const msg = 'Đăng nhập Google chưa được cấu hình (thiếu Firebase API Key trong file .env).';
         setAuthError(msg);
-        return { success: false, message: msg };
-        return { success: false, needsManualFallback: true };
+        return { success: false, needsManualFallback: true, message: msg };
       }
 
       // 2. Mở cửa sổ đăng nhập Google của Firebase Auth
@@ -171,8 +170,7 @@ export function AuthProvider({ children }) {
       ) {
         const msg = 'Firebase API Key không hợp lệ. Hãy kiểm tra lại cấu hình trong file .env.';
         setAuthError(msg);
-        return { success: false, message: msg };
-        return { success: false, needsManualFallback: true };
+        return { success: false, needsManualFallback: true, message: msg };
       }
 
       const msg = err.message || 'Lỗi khi đăng nhập với tài khoản Google.';
