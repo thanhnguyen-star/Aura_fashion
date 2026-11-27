@@ -311,9 +311,10 @@
 
 /* Logo grid */
 .tci-logo-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  grid-auto-rows: 1fr;
   gap: 10px;
-  flex-wrap: wrap;
 }
 
 .tci-logo-card {
@@ -323,13 +324,15 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 10px 14px;
+  padding: 12px 8px;
   border: 1.5px solid #e4e4e7;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
   background: #ffffff;
-  min-width: 86px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   user-select: none;
 }
 
@@ -344,9 +347,10 @@
 }
 
 .tci-logo-img-thumb {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   object-fit: contain;
+  flex-shrink: 0;
 }
 
 .tci-logo-name {
@@ -354,6 +358,12 @@
   font-weight: 600;
   color: #52525b;
   text-align: center;
+  line-height: 1.3;
+  width: 100%;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .tci-logo-card.active .tci-logo-name {
