@@ -18,6 +18,7 @@ export default function AdminLogin({
   onLoginSuccess,
   onBackToStore,
   onOpenRegister,
+  onSelectCategory,
   successMessage = '',
   sessionNotice = '',
   soLuong = 0,
@@ -108,13 +109,37 @@ export default function AdminLogin({
           AURA
         </a>
         <nav className="aura-header-nav">
-          <a href="#nam" className="aura-nav-link" onClick={handleGoStore}>
+          <a
+            href="#nam"
+            className="aura-nav-link"
+            onClick={(e) => {
+              e.preventDefault();
+              if (onSelectCategory) onSelectCategory('nam');
+              else onBackToStore?.();
+            }}
+          >
             Nam
           </a>
-          <a href="#nu" className="aura-nav-link" onClick={handleGoStore}>
+          <a
+            href="#nu"
+            className="aura-nav-link"
+            onClick={(e) => {
+              e.preventDefault();
+              if (onSelectCategory) onSelectCategory('nu');
+              else onBackToStore?.();
+            }}
+          >
             Nữ
           </a>
-          <a href="#phu-kien" className="aura-nav-link" onClick={handleGoStore}>
+          <a
+            href="#phu-kien"
+            className="aura-nav-link"
+            onClick={(e) => {
+              e.preventDefault();
+              if (onSelectCategory) onSelectCategory('phu-kien');
+              else onBackToStore?.();
+            }}
+          >
             Phụ kiện
           </a>
         </nav>

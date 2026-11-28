@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { saveAuthSession } from '../../utils/api.js';
+import { sendRegistrationOtp } from '../../utils/registrationOtp.js';
 import './AuthModal.css';
 
 function GoogleIcon() {
@@ -116,16 +117,8 @@ export default function AuthModal({
     try {
       setLoading(true);
       setErrorMessage('');
-      const res = await fetch('http://localhost:5000/api/auth/send-register-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email.trim().toLowerCase() }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.success) {
-        throw new Error(data.message || 'Không thể gửi lại mã OTP');
-      }
-      setInfoMessage(data.message || 'Mã OTP mới đã được gửi đến hộp thư Gmail của bạn.');
+      await sendRegistrationOtp(formData.email, formData.hoTen);
+      setInfoMessage(`Mã OTP mới đã được gửi đến hộp thư ${formData.email.trim().toLowerCase()}.`);
       setOtpCountdown(60);
     } catch (err) {
       setErrorMessage(err.message || 'Lỗi gửi lại mã OTP');
@@ -196,28 +189,17 @@ export default function AuthModal({
       return;
     }
 
-    // NẾU LÀ GMAIL VÀ CHƯA GỬI OTP -> Gửi OTP qua Gmail trước
+    // NẾU LÀ GMAIL VÀ CHƯA GỬI OTP -> Gửi OTP qua EmailJS
     if (isGmail && !otpStep) {
       try {
         setLoading(true);
-        const res = await fetch('http://localhost:5000/api/auth/send-register-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: formData.email.trim().toLowerCase() }),
-        });
-
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data.success) {
-          setErrorMessage(data.message || 'Không thể gửi mã xác thực đến Gmail.');
-          return;
-        }
-
+        await sendRegistrationOtp(formData.email, formData.hoTen);
         setOtpStep(true);
         setOtpCountdown(60);
-        setInfoMessage(data.message || `Mã xác thực OTP đã được gửi đến ${formData.email}.`);
+        setInfoMessage(`Mã xác thực OTP đã được gửi đến ${formData.email.trim().toLowerCase()}.`);
       } catch (err) {
         console.error('Lỗi gửi OTP:', err);
-        setErrorMessage('Không thể kết nối đến máy chủ để gửi mã OTP.');
+        setErrorMessage(err.message || 'Không thể gửi mã xác thực đến Gmail.');
       } finally {
         setLoading(false);
       }
@@ -363,8 +345,8 @@ export default function AuthModal({
   };
 
   return (
-    <div className="auth-modal-overlay" onClick={onClose}>
-      <div className="auth-modal-card" onClick={(e) => e.stopPropagation()}>
+    <div className="auth-modal-overlay">
+      <div className="auth-modal-card">
         <button type="button" className="auth-close-btn" onClick={onClose} aria-label="Đóng">
           <X size={18} />
         </button>
@@ -659,8 +641,8 @@ export default function AuthModal({
 
         {/* DIALOG XÁC NHẬN TÀI KHOẢN GOOGLE (FALLBACK) */}
         {googlePromptOpen && (
-          <div className="auth-google-prompt-overlay" onClick={() => setGooglePromptOpen(false)}>
-            <div className="auth-google-prompt-card" onClick={(e) => e.stopPropagation()}>
+          <div className="auth-google-prompt-overlay">
+            <div className="auth-google-prompt-card">
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <GoogleIcon />
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700 }}>Đăng nhập với Google</h3>

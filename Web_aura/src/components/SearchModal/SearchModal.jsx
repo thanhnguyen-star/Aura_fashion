@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, X, Sparkles, ArrowRight } from 'lucide-react';
+import { API_BASE, resolveImageUrl } from '../../utils/api.js';
 import './SearchModal.css';
 
 function formatCurrency(val) {
@@ -49,7 +50,7 @@ export default function SearchModal({
     const fetchList = async () => {
       try {
         setLoading(true);
-        const res = await fetch('http://localhost:5000/api/store/products');
+        const res = await fetch(`${API_BASE}/api/store/products`);
         const json = await res.json().catch(() => ({}));
         if (isMounted && res.ok && json.success && Array.isArray(json.data)) {
           setAllProducts(json.data);
@@ -121,7 +122,7 @@ export default function SearchModal({
                 const id = sp.MaSanPham || sp.id;
                 const ten = sp.TenSanPham || sp.ten;
                 const gia = sp.GiaBan || sp.gia;
-                const anh = sp.AnhDaiDien || sp.anh || '/img/sp1.png';
+                const anh = resolveImageUrl(sp.AnhDaiDien || sp.anh) || '/img/sp1.png';
                 const hoTroIn = Boolean(sp.HoTroIn);
 
                 return (

@@ -1,17 +1,42 @@
 const pool = require('../db');
+const { buildCategoryTree, getDescendantIds } = require('../utils/categoryTree');
 
-// 1. Lấy danh sách sản phẩm hiển thị trên Storefront
+// 1. Lấy danh sách sản phẩm hiển thị trên Storefront (ẩn nếu danh mục hoặc danh mục cha đang ẩn)
 async function getProducts(req, res) {
   try {
     const categoryId = req.query.categoryId ? Number(req.query.categoryId) : null;
+    const categorySlug = (req.query.categorySlug || '').trim();
     const featured = req.query.featured === '1' || req.query.featured === 'true';
 
-    const whereClauses = ['sp.DangKinhDoanh = 1'];
+    const whereClauses = [
+      'sp.DangKinhDoanh = 1',
+      'dm.HienThi = 1',
+      '(dm.MaDanhMucCha IS NULL OR dmp.HienThi = 1)',
+    ];
     const params = [];
 
-    if (categoryId) {
-      whereClauses.push('sp.MaDanhMuc = ?');
-      params.push(categoryId);
+    if (categoryId || categorySlug) {
+      const [catRows] = await pool.query(
+        `SELECT MaDanhMuc, MaDanhMucCha, TenDanhMuc, Slug, MoTa, ThuTu, HienThi FROM DanhMuc`
+      );
+      const { flatTree, nodeMap } = buildCategoryTree(catRows, 'order_asc');
+      let targetNode = null;
+      if (categoryId) {
+        targetNode = nodeMap.get(categoryId);
+      } else if (categorySlug) {
+        targetNode = flatTree.find((c) => c.Slug === categorySlug);
+      }
+
+      if (targetNode) {
+        if (!targetNode.EffectiveHienThi) {
+          return res.json({ success: true, data: [] });
+        }
+        const catIds = getDescendantIds(nodeMap, targetNode.MaDanhMuc);
+        whereClauses.push(`sp.MaDanhMuc IN (${catIds.map(() => '?').join(',')})`);
+        params.push(...catIds);
+      } else {
+        return res.json({ success: true, data: [] });
+      }
     }
 
     if (featured) {
@@ -25,6 +50,10 @@ async function getProducts(req, res) {
         sp.MaSanPham,
         sp.MaDanhMuc,
         dm.TenDanhMuc,
+        dm.Slug AS CategorySlug,
+        dm.MaDanhMucCha,
+        dmp.TenDanhMuc AS ParentCategoryName,
+        dmp.Slug AS ParentCategorySlug,
         sp.MaHienThi,
         sp.TenSanPham,
         sp.MoTa,
@@ -33,9 +62,12 @@ async function getProducts(req, res) {
         sp.NoiBat,
         anh.DuongDan AS AnhDaiDien,
         COALESCE(bt.TongTonKho, 0) AS TongTonKho,
-        COALESCE(bt.SoBienThe, 0) AS SoBienThe
+        COALESCE(bt.SoBienThe, 0) AS SoBienThe,
+        bt.SizesList,
+        bt.ColorsList
       FROM SanPham sp
-      LEFT JOIN DanhMuc dm ON dm.MaDanhMuc = sp.MaDanhMuc
+      INNER JOIN DanhMuc dm ON dm.MaDanhMuc = sp.MaDanhMuc
+      LEFT JOIN DanhMuc dmp ON dmp.MaDanhMuc = dm.MaDanhMucCha
       LEFT JOIN (
         SELECT a1.MaSanPham, a1.DuongDan
         FROM AnhSanPham a1
@@ -46,10 +78,17 @@ async function getProducts(req, res) {
         ) a2 ON a1.MaSanPham = a2.MaSanPham AND a1.ThuTu = a2.MinThuTu
       ) anh ON anh.MaSanPham = sp.MaSanPham
       LEFT JOIN (
-        SELECT MaSanPham, COUNT(*) AS SoBienThe, SUM(SoLuongTon) AS TongTonKho
-        FROM BienTheSanPham
-        WHERE DangKinhDoanh = 1
-        GROUP BY MaSanPham
+        SELECT
+          b.MaSanPham,
+          COUNT(*) AS SoBienThe,
+          SUM(b.SoLuongTon) AS TongTonKho,
+          GROUP_CONCAT(DISTINCT kt.TenKichThuoc ORDER BY kt.ThuTu SEPARATOR ',') AS SizesList,
+          GROUP_CONCAT(DISTINCT ms.MaHex SEPARATOR ',') AS ColorsList
+        FROM BienTheSanPham b
+        LEFT JOIN KichThuoc kt ON kt.MaKichThuoc = b.MaKichThuoc
+        LEFT JOIN MauSac ms ON ms.MaMauSac = b.MaMauSac
+        WHERE b.DangKinhDoanh = 1
+        GROUP BY b.MaSanPham
       ) bt ON bt.MaSanPham = sp.MaSanPham
       WHERE ${whereSql}
       ORDER BY sp.NoiBat DESC, sp.MaSanPham DESC
@@ -65,6 +104,8 @@ async function getProducts(req, res) {
         TongTonKho: Number(p.TongTonKho),
         SoBienThe: Number(p.SoBienThe),
         HetHang: Number(p.TongTonKho) <= 0,
+        sizes: p.SizesList ? p.SizesList.split(',').filter(Boolean) : [],
+        colors: p.ColorsList ? p.ColorsList.split(',').filter(Boolean) : [],
       })),
     });
   } catch (err) {
@@ -188,23 +229,84 @@ async function getTemplates(req, res) {
   }
 }
 
-// 4. Lấy danh mục hiển thị
+// 4. Lấy cây danh mục hiển thị (ẩn cha -> ẩn luôn con)
 async function getCategories(req, res) {
   try {
     const sql = `
       SELECT
         dm.MaDanhMuc,
+        dm.MaDanhMucCha,
         dm.TenDanhMuc,
+        dm.Slug,
         dm.MoTa,
-        COUNT(sp.MaSanPham) AS SoSanPham
+        dm.AnhDaiDien,
+        dm.ThuTu,
+        dm.HienThi,
+        COUNT(DISTINCT CASE WHEN sp.DangKinhDoanh = 1 THEN sp.MaSanPham END) AS DirectProductCount,
+        COUNT(DISTINCT CASE WHEN sp.DangKinhDoanh = 1 THEN sp.MaSanPham END) AS DirectActiveProductCount,
+        (
+          SELECT a.DuongDan
+          FROM SanPham sp2
+          INNER JOIN AnhSanPham a ON a.MaSanPham = sp2.MaSanPham
+          WHERE sp2.MaDanhMuc = dm.MaDanhMuc AND sp2.DangKinhDoanh = 1
+          ORDER BY sp2.NoiBat DESC, sp2.MaSanPham ASC, a.ThuTu ASC
+          LIMIT 1
+        ) AS AnhBia
       FROM DanhMuc dm
       LEFT JOIN SanPham sp ON sp.MaDanhMuc = dm.MaDanhMuc AND sp.DangKinhDoanh = 1
-      WHERE dm.HienThi = 1
-      GROUP BY dm.MaDanhMuc, dm.TenDanhMuc, dm.MoTa
-      ORDER BY dm.MaDanhMuc ASC
+      GROUP BY
+        dm.MaDanhMuc,
+        dm.MaDanhMucCha,
+        dm.TenDanhMuc,
+        dm.Slug,
+        dm.MoTa,
+        dm.AnhDaiDien,
+        dm.ThuTu,
+        dm.HienThi
+      ORDER BY dm.ThuTu ASC, dm.MaDanhMuc ASC
     `;
-    const [categories] = await pool.query(sql);
-    res.json({ success: true, data: categories });
+    const [rows] = await pool.query(sql);
+    const { roots, flatTree } = buildCategoryTree(rows, 'order_asc');
+
+    const sanitizeNode = (node) => ({
+      MaDanhMuc: node.MaDanhMuc,
+      MaDanhMucCha: node.MaDanhMucCha,
+      TenDanhMuc: node.TenDanhMuc,
+      Slug: node.Slug,
+      MoTa: node.MoTa,
+      AnhDaiDien: node.AnhDaiDien || node.AnhBia || '',
+      ThuTu: node.ThuTu,
+      AnhBia: node.AnhDaiDien || node.AnhBia || '',
+      ParentName: node.ParentName,
+      ParentSlug: node.ParentSlug,
+      SoSanPham: node.SoSanPhamHoatDong,
+      children: (node.children || [])
+        .filter((c) => c.EffectiveHienThi)
+        .map(sanitizeNode),
+    });
+
+    const visibleTree = roots.filter((r) => r.EffectiveHienThi).map(sanitizeNode);
+    const visibleFlat = flatTree
+      .filter((c) => c.EffectiveHienThi)
+      .map((c) => ({
+        MaDanhMuc: c.MaDanhMuc,
+        MaDanhMucCha: c.MaDanhMucCha,
+        TenDanhMuc: c.TenDanhMuc,
+        Slug: c.Slug,
+        MoTa: c.MoTa,
+        AnhDaiDien: c.AnhDaiDien || c.AnhBia || '',
+        ThuTu: c.ThuTu,
+        AnhBia: c.AnhDaiDien || c.AnhBia || '',
+        ParentName: c.ParentName,
+        ParentSlug: c.ParentSlug,
+        SoSanPham: c.SoSanPhamHoatDong,
+      }));
+
+    res.json({
+      success: true,
+      data: visibleFlat,
+      tree: visibleTree,
+    });
   } catch (err) {
     console.error('[store.controller > getCategories]', err);
     res.status(500).json({ success: false, message: 'Lỗi tải danh mục', error: err.message });

@@ -6,6 +6,7 @@ import {
   Search,
 } from 'lucide-react';
 import TuyChonIn from '../../components/TuyChonIn/TuyChonIn';
+import { API_BASE, resolveImageUrl } from '../../utils/api.js';
 import '../css/chiTietSanPham.css';
 
 function formatCurrency(val) {
@@ -54,7 +55,7 @@ export default function ChiTietSanPham({
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch(`http://localhost:5000/api/store/products/${productId}`);
+      const res = await fetch(`${API_BASE}/api/store/products/${productId}`);
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok || !data.success) {
@@ -181,7 +182,7 @@ export default function ChiTietSanPham({
       bigTemplate: printConfig.bigTemplate,
       logoTemplate: printConfig.logoTemplate,
       logoLocation: printConfig.logoLocation,
-      productImage: product.images?.[0]?.DuongDan || '/img/sp1.png',
+      productImage: resolveImageUrl(product.images?.[0]?.DuongDan) || '/img/sp1.png',
     };
 
     onAddToCart?.(cartItem);

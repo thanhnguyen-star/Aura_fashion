@@ -1,3 +1,5 @@
+import { getSidebarSubCategories } from './catalogConfig.js'
+
 export const danhSachDanhMuc = [
   {
     id: 1,
@@ -54,6 +56,27 @@ export const danhSachSanPham = [
 ]
 
 export const cauHinhTrangDanhMuc = {
+  all: {
+    slug: 'all',
+    breadcrumb: 'Tất cả sản phẩm',
+    tieuDe: 'TẤT CẢ SẢN PHẨM',
+    moTa: 'Toàn bộ thiết kế tối giản Nam, Nữ và Phụ kiện từ AURA Studio',
+    anhBanner: '/img/nam/banner-nam.jpg',
+    coKichCo: true,
+    mucGia: [
+      { id: 'all', label: 'Tất cả mức giá', min: 0, max: Infinity },
+      { id: 'under-500', label: 'Dưới 500.000đ', min: 0, max: 499999 },
+      { id: '500-1000', label: '500.000đ – 1.000.000đ', min: 500000, max: 1000000 },
+      { id: 'over-1000', label: 'Trên 1.000.000đ', min: 1000001, max: Infinity },
+    ],
+    danhMucCon: getSidebarSubCategories('all'),
+    promo: {
+      title: 'AURA ARCHIVE',
+      highlight: 'ĐỦ BỘ SƯU TẬP',
+      cta: 'IN ẤN DTG →',
+      anh: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=400&q=80',
+    },
+  },
   nam: {
     slug: 'nam',
     breadcrumb: 'THỜI TRANG NAM',
@@ -67,13 +90,7 @@ export const cauHinhTrangDanhMuc = {
       { id: '500-1000', label: '500.000đ – 1.000.000đ', min: 500000, max: 1000000 },
       { id: 'over-1000', label: 'Trên 1.000.000đ', min: 1000001, max: Infinity },
     ],
-    danhMucCon: [
-      { id: 'all', ten: 'Tất cả sản phẩm', icon: 'grid' },
-      { id: 'ao-nam', ten: 'Áo Nam', icon: 'shirt' },
-      { id: 'quan-nam', ten: 'Quần Nam', icon: 'trousers' },
-      { id: 'khoac-nam', ten: 'Khoác Nam', icon: 'jacket' },
-      { id: 'set-nam', ten: 'Set Đồ Nam', icon: 'layers' },
-    ],
+    danhMucCon: getSidebarSubCategories('nam'),
     promo: {
       title: 'ƯU ĐÃI ĐẶC BIỆT',
       highlight: 'LÊN ĐẾN 50%',
@@ -94,14 +111,7 @@ export const cauHinhTrangDanhMuc = {
       { id: '500-1000', label: '500.000đ – 1.000.000đ', min: 500000, max: 1000000 },
       { id: 'over-1000', label: 'Trên 1.000.000đ', min: 1000001, max: Infinity },
     ],
-    danhMucCon: [
-      { id: 'all', ten: 'Tất cả sản phẩm', icon: 'grid' },
-      { id: 'ao-nu', ten: 'Áo Nữ', icon: 'shirt' },
-      { id: 'vay-nu', ten: 'Váy Nữ', icon: 'dress' },
-      { id: 'quan-nu', ten: 'Quần Nữ', icon: 'trousers' },
-      { id: 'khoac-nu', ten: 'Khoác Nữ', icon: 'jacket' },
-      { id: 'set-nu', ten: 'Set Đồ Nữ', icon: 'layers' },
-    ],
+    danhMucCon: getSidebarSubCategories('nu'),
     promo: {
       title: 'FREESHIP',
       highlight: 'TOÀN QUỐC',
@@ -122,14 +132,7 @@ export const cauHinhTrangDanhMuc = {
       { id: '300-600', label: '300.000đ – 600.000đ', min: 300000, max: 600000 },
       { id: 'over-600', label: 'Trên 600.000đ', min: 600001, max: Infinity },
     ],
-    danhMucCon: [
-      { id: 'all', ten: 'Tất cả phụ kiện', icon: 'grid' },
-      { id: 'tui-xach', ten: 'Túi Xách', icon: 'bag' },
-      { id: 'balo', ten: 'Balo', icon: 'backpack' },
-      { id: 'mu-non', ten: 'Mũ Nón', icon: 'cap' },
-      { id: 'trang-suc', ten: 'Trang Sức', icon: 'gem' },
-      { id: 'phu-kien-khac', ten: 'Phụ Kiện Khác', icon: 'sparkles' },
-    ],
+    danhMucCon: getSidebarSubCategories('phu-kien'),
     promo: {
       title: 'QUÀ TẶNG',
       highlight: 'THỜI THƯỢNG',

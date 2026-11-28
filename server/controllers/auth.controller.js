@@ -280,6 +280,114 @@ async function registerFirebase(req, res) {
   }
 }
 
+// 3b. Đăng ký tài khoản trực tiếp (có xác thực OTP cho @gmail.com)
+async function register(req, res) {
+  const hoTen = (req.body.hoTen || '').trim();
+  const email = (req.body.email || '').trim().toLowerCase();
+  const password = req.body.password || '';
+  const soDienThoai = (req.body.soDienThoai || '').trim() || null;
+  const isGmail = email.endsWith('@gmail.com');
+  const otp = (req.body.otp || '').trim();
+
+  if (!hoTen || !email || !password) {
+    return res.status(400).json({ success: false, message: 'Họ tên, email và mật khẩu là bắt buộc.' });
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ success: false, message: 'Địa chỉ email không hợp lệ.' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ success: false, message: 'Mật khẩu phải có tối thiểu 6 ký tự.' });
+  }
+  if (isGmail && !/^\d{6}$/.test(otp)) {
+    return res.status(400).json({ success: false, message: 'Vui lòng nhập đầy đủ mã OTP gồm 6 chữ số.' });
+  }
+
+  let conn;
+  let transactionStarted = false;
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+    transactionStarted = true;
+
+    const [[existing]] = await conn.query(
+      'SELECT MaTaiKhoan FROM TaiKhoan WHERE LOWER(Email) = ? LIMIT 1',
+      [email]
+    );
+    if (existing) {
+      await conn.rollback();
+      transactionStarted = false;
+      return res.status(409).json({
+        success: false,
+        message: 'Email này đã được đăng ký. Vui lòng đăng nhập hoặc dùng email khác.',
+        code: 'EMAIL_ALREADY_EXISTS',
+      });
+    }
+
+    if (isGmail) {
+      const [[record]] = await conn.query(
+        'SELECT code, attempts, (expires_at < NOW()) AS expired FROM otp_codes WHERE email = ? FOR UPDATE',
+        [email]
+      );
+      if (!record) {
+        await conn.rollback();
+        transactionStarted = false;
+        return res.status(400).json({ success: false, message: 'Không tìm thấy mã OTP. Vui lòng gửi mã mới.', code: 'OTP_NOT_FOUND' });
+      }
+      if (Boolean(record.expired)) {
+        await conn.query('DELETE FROM otp_codes WHERE email = ?', [email]);
+        await conn.commit();
+        transactionStarted = false;
+        return res.status(400).json({ success: false, message: 'Mã OTP đã hết hạn. Vui lòng gửi mã mới.', code: 'OTP_EXPIRED' });
+      }
+      if (record.code !== otp) {
+        const attempts = Number(record.attempts) + 1;
+        if (attempts >= 5) {
+          await conn.query('DELETE FROM otp_codes WHERE email = ?', [email]);
+          await conn.commit();
+          transactionStarted = false;
+          return res.status(400).json({ success: false, message: 'Bạn đã nhập sai mã 5 lần. Vui lòng gửi mã mới.', code: 'OTP_ATTEMPTS_EXCEEDED' });
+        }
+        await conn.query('UPDATE otp_codes SET attempts = ? WHERE email = ?', [attempts, email]);
+        await conn.commit();
+        transactionStarted = false;
+        return res.status(400).json({
+          success: false,
+          message: `Mã OTP không chính xác. Bạn còn ${5 - attempts} lần thử.`,
+          code: 'INVALID_OTP',
+        });
+      }
+      await conn.query('DELETE FROM otp_codes WHERE email = ?', [email]);
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const [result] = await conn.query(
+      `INSERT INTO TaiKhoan (HoTen, Email, SoDienThoai, MatKhauBam, VaiTro, BiKhoa)
+       VALUES (?, ?, ?, ?, 'KHACH_HANG', 0)`,
+      [hoTen, email, soDienThoai, hashedPassword]
+    );
+    await conn.query('INSERT INTO GioHang (MaTaiKhoan) VALUES (?)', [result.insertId]);
+    await conn.commit();
+    transactionStarted = false;
+
+    const user = {
+      maTaiKhoan: result.insertId,
+      hoTen,
+      email,
+      soDienThoai,
+      vaiTro: 'KHACH_HANG',
+    };
+    const token = signToken(user);
+    return res.status(201).json({ success: true, message: 'Đăng ký tài khoản thành công.', token, user });
+  } catch (err) {
+    if (transactionStarted) await conn.rollback();
+    console.error('[auth.controller > register]', err);
+    return res.status(500).json({ success: false, message: 'Không thể lưu thông tin tài khoản.' });
+  } finally {
+    conn?.release();
+  }
+}
+
 // 4. Đăng nhập / Đăng ký nhanh qua tài khoản Google
 async function googleLogin(req, res) {
   const email = (req.body.email || '').trim().toLowerCase();
@@ -526,6 +634,7 @@ async function changePassword(req, res) {
 
 module.exports = {
   login,
+  register,
   googleLogin,
   sendOtp,
   verifyOtp,

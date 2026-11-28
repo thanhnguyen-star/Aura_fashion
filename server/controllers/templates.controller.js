@@ -13,6 +13,15 @@ function parsePositions(raw) {
     }
 }
 
+function getPublicBaseUrl(req) {
+    const fromEnv = (process.env.PUBLIC_API_URL || '').trim().replace(/\/+$/, '');
+    return fromEnv || `${req.protocol}://${req.get('host')}`;
+}
+
+function removeUploadedFile(file) {
+    if (file?.path) fs.unlink(file.path, () => { });
+}
+
 // 1. Lấy danh sách mẫu in + thống kê KPI
 async function getTemplates(req, res) {
     try {
@@ -69,8 +78,7 @@ async function getTemplates(req, res) {
             templates = templates.filter(
                 (t) =>
                     t.TenMau.toLowerCase().includes(search) ||
-                    t.MaHienThi.toLowerCase().includes(search) ||
-                    t.NhanKieuIn.toLowerCase().includes(search)
+                    t.MaHienThi.toLowerCase().includes(search)
             );
         }
 
@@ -110,6 +118,7 @@ async function createTemplate(req, res) {
         const viTriChoPhep = parsePositions(req.body.viTriChoPhep);
 
         if (!tenMauIn) {
+            removeUploadedFile(req.file);
             return res.status(400).json({ message: 'Vui lòng nhập tên mẫu in hiển thị' });
         }
 
@@ -117,11 +126,12 @@ async function createTemplate(req, res) {
         let dungLuongBytes = 0;
 
         if (req.file) {
-            duongDanPNG = `http://localhost:${process.env.PORT || 5000}/uploads/templates/${req.file.filename}`;
+            duongDanPNG = `${getPublicBaseUrl(req)}/uploads/templates/${req.file.filename}`;
             dungLuongBytes = req.file.size;
         }
 
         if (!duongDanPNG) {
+            removeUploadedFile(req.file);
             return res.status(400).json({
                 message: 'Vui lòng chọn tệp PNG trong suốt hoặc nhập đường dẫn ảnh',
             });
@@ -157,6 +167,7 @@ async function createTemplate(req, res) {
         });
     } catch (err) {
         console.error('[templates.controller > createTemplate]', err);
+        removeUploadedFile(req.file);
         res.status(500).json({ message: 'Lỗi nạp mẫu in vào kho', error: err.message });
     }
 }
@@ -235,7 +246,7 @@ async function deleteTemplate(req, res) {
         await pool.query(`DELETE FROM MauIn WHERE MaMauIn = ?`, [id]);
 
         if (existing.DuongDanPNG?.includes('/uploads/templates/')) {
-            const filename = existing.DuongDanPNG.split('/uploads/templates/').pop();
+            const filename = path.basename(existing.DuongDanPNG.split('/uploads/templates/').pop());
             const filePath = path.join(__dirname, '..', 'uploads', 'templates', filename);
             fs.unlink(filePath, () => { });
         }

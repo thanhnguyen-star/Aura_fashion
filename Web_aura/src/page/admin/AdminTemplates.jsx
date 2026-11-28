@@ -2,36 +2,24 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import {
     Upload,
     Layers,
-    CheckCircle2,
-    Cloud,
-    Printer,
     UploadCloud,
     Search,
     MoreVertical,
     ImageOff,
-    Sliders,
+    Pencil,
+    ExternalLink,
+    Trash2,
+    X,
+    AlertTriangle,
 } from 'lucide-react';
 import AdminLayout from './AdminLayout';
-import { adminFetch, getAuthToken, triggerUnauthorizedLogout } from '../../utils/api';
+import {
+    API_BASE,
+    adminFetch,
+    getAuthToken,
+    triggerUnauthorizedLogout,
+} from '../../utils/api';
 import '../css/adminTemplates.css';
-
-const API_BASE = 'http://localhost:5000';
-
-const POSITIONS_BY_TYPE = {
-    MAU_LON: [
-        { id: 'A3 FRONT', label: 'Mặt trước lớn (A3 Front)', dim: '28 x 36 cm' },
-        { id: 'BACK PRINT', label: 'Mặt sau lớn (Back Print)', dim: '30 x 40 cm' },
-        { id: 'A3+ MASTER', label: 'Khổ đại A3+ Master', dim: '32 x 45 cm' },
-        { id: 'ALL-OVER', label: 'In toàn thân (All-Over)', dim: 'Full panel' },
-    ],
-    LOGO: [
-        { id: 'Ngực trái', label: 'Ngực trái', dim: '8 x 8 cm' },
-        { id: 'Ngực phải', label: 'Ngực phải', dim: '8 x 8 cm' },
-        { id: 'Tay áo trái', label: 'Tay áo trái', dim: '6 x 6 cm' },
-        { id: 'Tay áo phải', label: 'Tay áo phải', dim: '6 x 6 cm' },
-        { id: 'Gáy cổ sau', label: 'Gáy cổ sau', dim: '5 x 5 cm' },
-    ],
-};
 
 export default function AdminTemplates({
     adminUser,
@@ -56,7 +44,12 @@ export default function AdminTemplates({
     const [error, setError] = useState('');
     const [openMenuId, setOpenMenuId] = useState(null);
 
-    // Form tải lên PNG mới
+    // Khu vực tải lên PNG mới (mặc định thu gọn)
+    const [showUploadPanel, setShowUploadPanel] = useState(false);
+    const uploadSectionRef = useRef(null);
+    const cardRefs = useRef(new Map());
+    const [highlightId, setHighlightId] = useState(null);
+
     const fileInputRef = useRef(null);
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
@@ -64,18 +57,27 @@ export default function AdminTemplates({
     const [dragging, setDragging] = useState(false);
 
     const [tenMau, setTenMau] = useState('');
-    const [selectedPositions, setSelectedPositions] = useState(['A3 FRONT', 'BACK PRINT']);
     const [uploading, setUploading] = useState(false);
     const [uploadMsg, setUploadMsg] = useState('');
 
-    // Tự cập nhật danh sách vị trí mặc định khi đổi tab Mẫu lớn / Logo nhỏ
+    // Modal Đổi tên & Xóa mẫu in
+    const [renameTarget, setRenameTarget] = useState(null);
+    const [renameValue, setRenameValue] = useState('');
+    const [renaming, setRenaming] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState(null);
+    const [deleting, setDeleting] = useState(false);
+
     const handleSwitchType = (nextType) => {
         setActiveType(nextType);
-        setSelectedPositions(
-            nextType === 'LOGO'
-                ? ['Ngực trái', 'Ngực phải', 'Gáy cổ sau']
-                : ['A3 FRONT', 'BACK PRINT']
-        );
+    };
+
+    const handleOpenUpload = () => {
+        setShowUploadPanel(true);
+        setError('');
+        setUploadMsg('');
+        setTimeout(() => {
+            uploadSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 40);
     };
 
     const fetchTemplates = useCallback(async () => {
@@ -143,12 +145,6 @@ export default function AdminTemplates({
         img.src = url;
     };
 
-    const handleTogglePosition = (posId) => {
-        setSelectedPositions((prev) =>
-            prev.includes(posId) ? prev.filter((p) => p !== posId) : [...prev, posId]
-        );
-    };
-
     const handleUploadSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -169,11 +165,6 @@ export default function AdminTemplates({
             formData.append('file', selectedFile);
             formData.append('tenMau', tenMau.trim());
             formData.append('loaiMau', activeType);
-            formData.append(
-                'nhanKieuIn',
-                selectedPositions[0] || (activeType === 'MAU_LON' ? 'A3 FRONT' : 'NGỰC TRÁI')
-            );
-            formData.append('viTriChoPhep', JSON.stringify(selectedPositions));
             formData.append('kichThuocPx', detectedPx || '3600 × 4800 px · 300 DPI');
 
             const token = getAuthToken();
@@ -192,13 +183,27 @@ export default function AdminTemplates({
                 throw new Error(data.message || 'Tải tệp thất bại');
             }
 
+            const createdId = data.maMauIn;
             setTenMau('');
             setSelectedFile(null);
             setPreviewUrl('');
             setDetectedPx('');
             if (fileInputRef.current) fileInputRef.current.value = '';
+            setShowUploadPanel(false);
             setUploadMsg('Đã nạp tệp mẫu in vào kho thành công.');
-            fetchTemplates();
+            await fetchTemplates();
+
+            if (createdId) {
+                setHighlightId(createdId);
+                setTimeout(() => {
+                    cardRefs.current
+                        .get(createdId)
+                        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+                setTimeout(() => {
+                    setHighlightId((prev) => (prev === createdId ? null : prev));
+                }, 2400);
+            }
         } catch (err) {
             setError(err.message);
         } finally {
@@ -225,29 +230,67 @@ export default function AdminTemplates({
         }
     };
 
-    const handleDeleteTemplate = async (item) => {
+    const handleOpenRename = (item) => {
         setOpenMenuId(null);
-        if (!window.confirm(`Xóa mẫu in "${item.TenMau}" khỏi kho?`)) return;
+        setRenameTarget(item);
+        setRenameValue(item.TenMau || '');
+    };
 
+    const handleConfirmRename = async (e) => {
+        e.preventDefault();
+        if (!renameTarget || !renameValue.trim()) return;
+        setRenaming(true);
+        setError('');
         try {
-            await adminFetch(`/api/admin/templates/${item.MaMauIn}`, {
-                method: 'DELETE',
+            await adminFetch(`/api/admin/templates/${renameTarget.MaMauIn}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    tenMau: renameValue.trim(),
+                    nhanKieuIn: renameTarget.NhanKieuIn,
+                    viTriChoPhep: renameTarget.ViTriChoPhep,
+                }),
             });
+            setRenameTarget(null);
+            setRenameValue('');
             fetchTemplates();
         } catch (err) {
             setError(err.message);
+        } finally {
+            setRenaming(false);
         }
     };
 
-    const activePercent =
-        stats.tongArtwork > 0
-            ? Math.round((stats.dangKichHoat / stats.tongArtwork) * 100)
-            : 0;
-    const storagePercent = Math.min(
-        100,
-        Math.round((stats.dungLuongMB / (stats.gioiHanGB * 1024)) * 100)
-    );
-    const currentPositions = POSITIONS_BY_TYPE[activeType];
+    const handleViewOriginal = (item) => {
+        setOpenMenuId(null);
+        if (!item.DuongDanAnh) {
+            setError('Mẫu in này chưa có đường dẫn ảnh gốc.');
+            return;
+        }
+        window.open(item.DuongDanAnh, '_blank', 'noopener,noreferrer');
+    };
+
+    const handleRequestDelete = (item) => {
+        setOpenMenuId(null);
+        setError('');
+        setDeleteTarget(item);
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!deleteTarget) return;
+        setDeleting(true);
+        try {
+            await adminFetch(`/api/admin/templates/${deleteTarget.MaMauIn}`, {
+                method: 'DELETE',
+            });
+            setDeleteTarget(null);
+            fetchTemplates();
+        } catch (err) {
+            setError(err.message);
+            setDeleteTarget(null);
+        } finally {
+            setDeleting(false);
+        }
+    };
 
     return (
         <AdminLayout
@@ -259,106 +302,24 @@ export default function AdminTemplates({
             searchQuery={search}
             onSearchChange={setSearch}
         >
-            {/* Header + 2 Tab Mẫu lớn / Logo nhỏ */}
+
             <div className="at-header">
                 <div>
                     <p className="at-eyebrow">KHO NGUYÊN BẢN · STUDIO ARCHIVE</p>
                     <h1 className="aura-page-title">Quản lý mẫu in</h1>
-                    <p className="at-subtitle">
-                        Hệ thống lưu trữ và chuẩn hóa tệp in độ phân giải cao phục vụ công nghệ in DTG và In lụa thủ công.
-                    </p>
                 </div>
 
                 <div className="at-header-controls">
-                    <div className="at-tab-group">
-                        <button
-                            type="button"
-                            className={`at-tab-btn ${activeType === 'MAU_LON' ? 'active' : ''}`}
-                            onClick={() => handleSwitchType('MAU_LON')}
-                        >
-                            MẪU LỚN (FULL PRINT)
-                        </button>
-                        <button
-                            type="button"
-                            className={`at-tab-btn ${activeType === 'LOGO' ? 'active' : ''}`}
-                            onClick={() => handleSwitchType('LOGO')}
-                        >
-                            LOGO NHỎ (BADGE &amp; POCKET)
-                        </button>
-                    </div>
-
                     <button
                         type="button"
                         className="at-upload-cta"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={handleOpenUpload}
                     >
                         <Upload size={14} />
-                        <span>TẢI TỆP MỚI</span>
+                        <span>Tải tệp mới</span>
                     </button>
                 </div>
             </div>
-
-            {/* 4 Thẻ KPI */}
-            <section className="at-kpi-grid">
-                <div className="at-kpi-card">
-                    <div className="at-kpi-top">
-                        <p className="at-kpi-label">TỔNG SỐ ARTWORK</p>
-                        <Layers size={15} color="#4b5563" />
-                    </div>
-                    <div className="at-kpi-value-row">
-                        <span className="at-kpi-num">{stats.tongArtwork}</span>
-                        <span className="at-kpi-unit">tệp đạt chuẩn</span>
-                    </div>
-                    <div className="ac-progress-track">
-                        <div className="ac-progress-bar" style={{ width: '100%' }} />
-                    </div>
-                </div>
-
-                <div className="at-kpi-card">
-                    <div className="at-kpi-top">
-                        <p className="at-kpi-label">ĐANG KÍCH HOẠT</p>
-                        <CheckCircle2 size={15} color="#4b5563" />
-                    </div>
-                    <div className="at-kpi-value-row">
-                        <span className="at-kpi-num">{stats.dangKichHoat}</span>
-                        <span className="at-kpi-unit">sẵn sàng custom</span>
-                    </div>
-                    <div className="ac-progress-track">
-                        <div className="ac-progress-bar" style={{ width: `${activePercent}%` }} />
-                    </div>
-                </div>
-
-                <div className="at-kpi-card">
-                    <div className="at-kpi-top">
-                        <p className="at-kpi-label">DUNG LƯỢNG KHO PNG</p>
-                        <Cloud size={15} color="#4b5563" />
-                    </div>
-                    <div className="at-kpi-value-row">
-                        <span className="at-kpi-num">{stats.dungLuongMB} MB</span>
-                        <span className="at-kpi-unit">/ {stats.gioiHanGB} GB Cloud</span>
-                    </div>
-                    <div className="ac-progress-track">
-                        <div className="ac-progress-bar" style={{ width: `${Math.max(4, storagePercent)}%` }} />
-                    </div>
-                </div>
-
-                <div className="at-kpi-card">
-                    <div className="at-kpi-top">
-                        <p className="at-kpi-label">PHƯƠNG THỨC IN TỐI ƯU</p>
-                        <Printer size={15} color="#4b5563" />
-                    </div>
-                    <div className="at-method-rows">
-                        <div className="at-method-row">
-                            <span>Direct-to-Garment</span>
-                            <span className="at-method-badge">DTG 1200 DPI</span>
-                        </div>
-                        <div className="at-method-row">
-                            <span>In lụa 4 bản phim</span>
-                            <span className="at-method-badge">In decal ép nhiệt</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
 
             {error && (
                 <div className="aura-login-error" style={{ marginBottom: 16 }}>
@@ -382,134 +343,126 @@ export default function AdminTemplates({
                 </div>
             )}
 
-            {/* Khu vực tải lên tệp in trong suốt */}
-            <section className="at-upload-card">
-                <div className="at-upload-head">
-                    <span className="at-upload-head-title">
-                        <UploadCloud size={15} />
-                        KHU VỰC TẢI LÊN TỆP IN TRONG SUỐT
-                    </span>
-                    <span className="at-upload-head-note">
-                        Yêu cầu kênh Alpha (Transparent Channel) sạch 100%
-                    </span>
-                </div>
-
-                <form className="at-upload-body" onSubmit={handleUploadSubmit}>
-                    {/* Ô kéo thả PNG bên trái */}
-                    <div
-                        className={`at-dropzone ${dragging ? 'dragging' : ''}`}
-                        onClick={() => fileInputRef.current?.click()}
-                        onDragOver={(e) => {
-                            e.preventDefault();
-                            setDragging(true);
-                        }}
-                        onDragLeave={() => setDragging(false)}
-                        onDrop={(e) => {
-                            e.preventDefault();
-                            setDragging(false);
-                            handleSelectFile(e.dataTransfer.files?.[0]);
-                        }}
-                    >
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept="image/png"
-                            hidden
-                            onChange={(e) => handleSelectFile(e.target.files?.[0])}
-                        />
-
-                        {previewUrl ? (
-                            <div className="at-preview-stage">
-                                <div className="at-preview-checker">
-                                    <img src={previewUrl} alt="Xem trước PNG" />
-                                </div>
-                                <p className="at-dropzone-title">{selectedFile?.name}</p>
-                                <p className="at-art-dim">
-                                    {detectedPx} · {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB (Bấm để đổi tệp)
-                                </p>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="at-dropzone-icon">
-                                    <Layers size={20} />
-                                </div>
-                                <p className="at-dropzone-title">
-                                    Kéo thả hoặc tải lên file PNG trong suốt
-                                </p>
-                                <p className="at-dropzone-desc">
-                                    Chỉ chấp nhận PNG nền trong suốt, tối đa 25MB, chuẩn màu sRGB / Adobe RGB, độ phân giải tối thiểu 300 DPI.
-                                </p>
-                                <div className="at-spec-pills">
-                                    <span className="at-spec-pill">.PNG TRANSPARENT</span>
-                                    <span className="at-spec-pill">MAX 25MB</span>
-                                    <span className="at-spec-pill">ALPHA CHANNEL ONLY</span>
-                                </div>
-                            </>
-                        )}
-                    </div>
-
-                    {/* Cột cấu hình tên & vị trí in bên phải */}
-                    <div className="at-upload-form">
-                        <div>
-                            <label className="ap-field-label">TÊN MẪU IN HIỂN THỊ</label>
-                            <input
-                                className="ap-field-input"
-                                placeholder="Ví dụ: AURA Brutalist Vector #09"
-                                value={tenMau}
-                                onChange={(e) => setTenMau(e.target.value)}
-                            />
-                        </div>
-
-                        <div>
-                            <div className="at-pos-head">
-                                <span className="ap-field-label" style={{ marginBottom: 0 }}>
-                                    VỊ TRÍ ÉP / THÊU CHO PHÉP
-                                </span>
-                                <span className="at-pos-badge">
-                                    {activeType === 'LOGO' ? 'LOGO NHỎ' : 'MẪU LỚN'}
-                                </span>
-                            </div>
-                            <p className="at-pos-note">
-                                Chọn các tọa độ mockup được phép áp dụng mẫu in này trên áo:
-                            </p>
-
-                            <div className="at-pos-list">
-                                {currentPositions.map((pos) => (
-                                    <label key={pos.id} className="at-pos-item">
-                                        <span className="at-pos-left">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedPositions.includes(pos.id)}
-                                                onChange={() => handleTogglePosition(pos.id)}
-                                            />
-                                            <span>{pos.label}</span>
-                                        </span>
-                                        <span className="at-pos-dim">{pos.dim}</span>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-
-                        <button type="submit" className="at-submit-btn" disabled={uploading}>
+            {/* Khu vực tải lên tệp in trong suốt (mặc định thu gọn) */}
+            {showUploadPanel && (
+                <section ref={uploadSectionRef} className="at-upload-card">
+                    <div className="at-upload-head">
+                        <span className="at-upload-head-title">
                             <UploadCloud size={15} />
-                            <span>{uploading ? 'ĐANG NẠP VÀO KHO...' : 'XÁC NHẬN NẠP VÀO KHO'}</span>
-                        </button>
+                            KHU VỰC TẢI LÊN TỆP IN TRONG SUỐT
+                        </span>
+                        <div className="at-upload-head-right">
+                            <span className="at-upload-head-note">
+                                Yêu cầu kênh Alpha (Transparent Channel) sạch 100%
+                            </span>
+                            <button
+                                type="button"
+                                className="at-upload-close"
+                                aria-label="Thu gọn khu tải lên"
+                                onClick={() => setShowUploadPanel(false)}
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
                     </div>
-                </form>
-            </section>
 
-            {/* Thanh tiêu đề lưới artwork */}
+                    <form className="at-upload-body" onSubmit={handleUploadSubmit}>
+                        {/* Ô kéo thả PNG bên trái */}
+                        <div
+                            className={`at-dropzone ${dragging ? 'dragging' : ''}`}
+                            onClick={() => fileInputRef.current?.click()}
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                setDragging(true);
+                            }}
+                            onDragLeave={() => setDragging(false)}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                setDragging(false);
+                                handleSelectFile(e.dataTransfer.files?.[0]);
+                            }}
+                        >
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/png"
+                                hidden
+                                onChange={(e) => handleSelectFile(e.target.files?.[0])}
+                            />
+
+                            {previewUrl ? (
+                                <div className="at-preview-stage">
+                                    <div className="at-preview-checker">
+                                        <img src={previewUrl} alt="Xem trước PNG" />
+                                    </div>
+                                    <p className="at-dropzone-title">{selectedFile?.name}</p>
+                                    <p className="at-art-dim">
+                                        {detectedPx} · {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB (Bấm để đổi tệp)
+                                    </p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="at-dropzone-icon">
+                                        <Layers size={20} />
+                                    </div>
+                                    <p className="at-dropzone-title">
+                                        Kéo thả hoặc tải lên file PNG trong suốt
+                                    </p>
+                                    <p className="at-dropzone-desc">
+                                        Chỉ chấp nhận PNG nền trong suốt, tối đa 25MB.
+                                    </p>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Cột cấu hình tên mẫu in bên phải */}
+                        <div className="at-upload-form">
+                            <div>
+                                <label className="ap-field-label">TÊN MẪU IN HIỂN THỊ</label>
+                                <input
+                                    className="ap-field-input"
+                                    placeholder="Ví dụ: AURA Brutalist Vector #09"
+                                    value={tenMau}
+                                    onChange={(e) => setTenMau(e.target.value)}
+                                />
+                                <p className="at-upload-type-note">
+                                    Nhóm hiện tại:{' '}
+                                    <strong>{activeType === 'LOGO' ? 'Logo nhỏ' : 'Mẫu lớn'}</strong>
+                                </p>
+                            </div>
+
+                            <button type="submit" className="at-submit-btn" disabled={uploading}>
+                                <UploadCloud size={15} />
+                                <span>{uploading ? 'ĐANG NẠP VÀO KHO...' : 'XÁC NHẬN NẠP VÀO KHO'}</span>
+                            </button>
+                        </div>
+                    </form>
+                </section>
+            )}
+
+            {/* Thanh tab chuyển Mẫu lớn / Logo nhỏ + bộ lọc */}
             <div className="at-gallery-bar">
-                <div className="at-gallery-title-wrap">
-                    <h2 className="at-gallery-title">
-                        DANH MỤC:{' '}
-                        {activeType === 'MAU_LON'
-                            ? 'MẪU LỚN (FULL PRINT)'
-                            : 'LOGO NHỎ (BADGE & POCKET)'}
-                    </h2>
-                    <span className="at-gallery-count">
-                        {templates.length} TỆP HIỆN HÀNH
-                    </span>
+                <div className="at-tab-group" role="tablist" aria-label="Phân loại mẫu in">
+                    <button
+                        type="button"
+                        role="tab"
+                        aria-selected={activeType === 'MAU_LON'}
+                        className={`at-tab-btn ${activeType === 'MAU_LON' ? 'active' : ''}`}
+                        onClick={() => handleSwitchType('MAU_LON')}
+                    >
+                        <span>Mẫu lớn</span>
+                        <span className="at-tab-count">{stats.soMauLon}</span>
+                    </button>
+                    <button
+                        type="button"
+                        role="tab"
+                        aria-selected={activeType === 'LOGO'}
+                        className={`at-tab-btn ${activeType === 'LOGO' ? 'active' : ''}`}
+                        onClick={() => handleSwitchType('LOGO')}
+                    >
+                        <span>Logo nhỏ</span>
+                        <span className="at-tab-count">{stats.soLogoNho}</span>
+                    </button>
                 </div>
 
                 <div className="at-gallery-filters">
@@ -541,15 +494,20 @@ export default function AdminTemplates({
             ) : templates.length === 0 ? (
                 <div className="aura-card aura-empty-cell" style={{ marginBottom: 24 }}>
                     Chưa có mẫu in nào trong nhóm{' '}
-                    {activeType === 'MAU_LON' ? 'Mẫu lớn' : 'Logo nhỏ'}. Hãy tải lên file PNG ở khung phía trên.
+                    {activeType === 'MAU_LON' ? 'Mẫu lớn' : 'Logo nhỏ'}. Hãy bấm &ldquo;Tải tệp mới&rdquo; để nạp file PNG.
                 </div>
             ) : (
                 <section className="at-grid">
                     {templates.map((item) => (
-                        <article key={item.MaMauIn} className="at-art-card">
+                        <article
+                            key={item.MaMauIn}
+                            ref={(el) => {
+                                if (el) cardRefs.current.set(item.MaMauIn, el);
+                                else cardRefs.current.delete(item.MaMauIn);
+                            }}
+                            className={`at-art-card ${highlightId === item.MaMauIn ? 'is-highlighted' : ''}`}
+                        >
                             <div className="at-art-stage">
-                                <span className="at-art-badge">{item.NhanKieuIn}</span>
-
                                 <div
                                     style={{ position: 'absolute', top: 8, right: 8 }}
                                     onClick={(e) => e.stopPropagation()}
@@ -558,6 +516,7 @@ export default function AdminTemplates({
                                         type="button"
                                         className="at-art-menu-btn"
                                         style={{ position: 'static' }}
+                                        aria-label={`Thao tác ${item.TenMau}`}
                                         onClick={() =>
                                             setOpenMenuId((prev) =>
                                                 prev === item.MaMauIn ? null : item.MaMauIn
@@ -568,13 +527,31 @@ export default function AdminTemplates({
                                     </button>
 
                                     {openMenuId === item.MaMauIn && (
-                                        <div className="ac-action-menu">
+                                        <div className="at-card-menu">
                                             <button
                                                 type="button"
-                                                className="danger"
-                                                onClick={() => handleDeleteTemplate(item)}
+                                                className="at-card-menu-item"
+                                                onClick={() => handleOpenRename(item)}
                                             >
-                                                Xóa mẫu in
+                                                <Pencil size={14} />
+                                                <span>Đổi tên</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="at-card-menu-item"
+                                                onClick={() => handleViewOriginal(item)}
+                                            >
+                                                <ExternalLink size={14} />
+                                                <span>Xem ảnh gốc</span>
+                                            </button>
+                                            <div className="at-card-menu-divider" />
+                                            <button
+                                                type="button"
+                                                className="at-card-menu-item danger"
+                                                onClick={() => handleRequestDelete(item)}
+                                            >
+                                                <Trash2 size={14} />
+                                                <span>Xóa</span>
                                             </button>
                                         </div>
                                     )}
@@ -617,29 +594,104 @@ export default function AdminTemplates({
                 </section>
             )}
 
-            {/* Banner kiểm soát chuẩn in cuối trang */}
-            <section className="at-qc-banner">
-                <div className="at-qc-left">
-                    <div className="at-qc-icon">
-                        <Sliders size={18} />
-                    </div>
-                    <div>
-                        <h3 className="at-qc-title">KIỂM SOÁT CHUẨN IN DTG &amp; LƯỚI LỤA</h3>
-                        <p className="at-qc-desc">
-                            Tất cả tệp tải lên đều được xử lý qua bộ tiền lọc Alpha-Channel để loại bỏ viền halo màu trắng hoặc xám rác. Đảm bảo mực in bám trực tiếp lên thớ vải 100% Cotton 320 GSM mà không tạo cộm bề mặt.
-                        </p>
-                    </div>
-                </div>
+            {/* Modal Đổi tên mẫu in */}
+            {renameTarget && (
+                <div className="aura-modal-backdrop" onClick={() => !renaming && setRenameTarget(null)}>
+                    <div className="aura-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="aura-modal-header">
+                            <h3>Đổi tên mẫu in</h3>
+                            <button
+                                type="button"
+                                className="aura-icon-btn"
+                                disabled={renaming}
+                                onClick={() => setRenameTarget(null)}
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
 
-                <div className="at-qc-actions">
-                    <button type="button" className="ac-btn-outline">
-                        XEM HƯỚNG DẪN CHUẨN FILE
-                    </button>
-                    <button type="button" className="at-btn-dark" onClick={fetchTemplates}>
-                        KIỂM ĐỊNH TOÀN BỘ KHO
-                    </button>
+                        <form className="aura-modal-body" onSubmit={handleConfirmRename}>
+                            <div>
+                                <label className="ap-field-label">Tên mẫu in mới *</label>
+                                <input
+                                    className="ap-field-input"
+                                    value={renameValue}
+                                    onChange={(e) => setRenameValue(e.target.value)}
+                                    required
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="ap-modal-actions">
+                                <button
+                                    type="button"
+                                    className="ap-btn-cancel"
+                                    disabled={renaming}
+                                    onClick={() => setRenameTarget(null)}
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="ap-btn-save"
+                                    disabled={renaming || !renameValue.trim()}
+                                >
+                                    {renaming ? 'Đang lưu...' : 'Lưu tên mới'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-            </section>
+            )}
+
+            {/* Modal Xác nhận xóa mẫu in */}
+            {deleteTarget && (
+                <div className="aura-modal-backdrop" onClick={() => !deleting && setDeleteTarget(null)}>
+                    <div className="aura-modal at-confirm-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="aura-modal-header">
+                            <h3>Xác nhận xóa mẫu in</h3>
+                            <button
+                                type="button"
+                                className="aura-icon-btn"
+                                disabled={deleting}
+                                onClick={() => setDeleteTarget(null)}
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className="aura-modal-body">
+                            <div className="at-confirm-box">
+                                <span className="at-confirm-icon">
+                                    <AlertTriangle size={20} />
+                                </span>
+                                <p>
+                                    Bạn có chắc chắn muốn xóa mẫu in{' '}
+                                    <strong>&ldquo;{deleteTarget.TenMau}&rdquo;</strong> khỏi kho? Hành động này không thể hoàn tác.
+                                </p>
+                            </div>
+                            <div className="ap-modal-actions">
+                                <button
+                                    type="button"
+                                    className="ap-btn-cancel"
+                                    disabled={deleting}
+                                    onClick={() => setDeleteTarget(null)}
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    type="button"
+                                    className="at-btn-danger"
+                                    disabled={deleting}
+                                    onClick={handleConfirmDelete}
+                                >
+                                    {deleting ? 'Đang xóa...' : 'Xác nhận xóa'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </AdminLayout>
     );
 }

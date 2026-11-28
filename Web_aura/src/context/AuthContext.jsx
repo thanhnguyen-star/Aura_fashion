@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   signInWithGooglePopup,
@@ -21,20 +22,22 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [authError, setAuthError] = useState('');
 
-  // Tự động đăng xuất khi nhận sự kiện 401 (hết hạn token hoặc server khởi động lại bootId mới)
+  // Tự động đăng xuất khi nhận sự kiện 401
   useEffect(() => {
     const handleUnauthorized = (e) => {
       signOutFirebase().catch(() => {});
       clearAuthSession();
       setCurrentUser(null);
-      setAuthError(e.detail?.message || 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+      setAuthError(
+        e.detail?.message || 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'
+      );
     };
 
     window.addEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
     return () => window.removeEventListener(AUTH_UNAUTHORIZED_EVENT, handleUnauthorized);
   }, []);
 
-  // Kiểm tra tính hợp lệ của phiên trong sessionStorage với server (bootId) khi tải trang
+  // Kiểm tra tính hợp lệ của phiên đăng nhập khi tải trang
   useEffect(() => {
     const token = getAuthToken();
     if (!token) return;
@@ -46,10 +49,11 @@ export function AuthProvider({ children }) {
     })
       .then(async (res) => {
         if (cancelled) return;
+
         if (res.status === 401) {
           const data = await res.json().catch(() => ({}));
           triggerUnauthorizedLogout(
-            data.message || 'Máy chủ vừa khởi động lại. Vui lòng đăng nhập lại từ đầu.',
+            data.message || 'Máy chủ vừa khởi động lại. Vui lòng đăng nhập lại từ đầu.'
           );
         }
       })
@@ -63,19 +67,24 @@ export function AuthProvider({ children }) {
   }, []);
 
   /**
-   * Đăng nhập chuẩn bằng Email & Mật khẩu
+   * Đăng nhập bằng Email & Mật khẩu
    */
   const login = useCallback(async (email, password) => {
     setLoading(true);
     setAuthError('');
+
     try {
       const res = await fetch(`${API_BASE}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          password,
+        }),
       });
 
       const data = await res.json().catch(() => ({}));
+
       if (!res.ok || !data.success) {
         const msg = data.message || 'Email hoặc mật khẩu không chính xác';
         setAuthError(msg);
@@ -85,11 +94,14 @@ export function AuthProvider({ children }) {
       const userData = data.user;
       saveAuthSession(data.token, userData);
       setCurrentUser(userData);
+
       return { success: true, user: userData, token: data.token };
     } catch (err) {
       console.error('[AuthContext > login]', err);
+
       const msg = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.';
       setAuthError(msg);
+
       return { success: false, message: msg };
     } finally {
       setLoading(false);
@@ -97,7 +109,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   /**
-   * Đăng nhập thông qua Google với Firebase Authentication
+   * Đăng nhập bằng Google với Firebase Authentication
    */
   const loginWithGoogle = useCallback(async () => {
     setLoading(true);
@@ -105,14 +117,13 @@ export function AuthProvider({ children }) {
 
     try {
       // 1. Kiểm tra cấu hình Firebase
-      // 1. Kiểm tra cấu hình Firebase — nếu chưa có key, fallback nhập email thủ công
       if (!isFirebaseConfigured()) {
         const msg = 'Đăng nhập Google chưa được cấu hình (thiếu Firebase API Key trong file .env).';
         setAuthError(msg);
         return { success: false, needsManualFallback: true, message: msg };
       }
 
-      // 2. Mở cửa sổ đăng nhập Google của Firebase Auth
+      // 2. Mở cửa sổ đăng nhập Google
       const firebaseRes = await signInWithGooglePopup();
       const fbUser = firebaseRes.user;
 
@@ -120,7 +131,7 @@ export function AuthProvider({ children }) {
         throw new Error('Không nhận được thông tin email từ tài khoản Google.');
       }
 
-      // 3. Đồng bộ tài khoản với Backend AURA (MySQL) bằng email/name từ Firebase
+      // 3. Đồng bộ tài khoản với Backend AURA
       const res = await fetch(`${API_BASE}/api/auth/google-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -136,14 +147,17 @@ export function AuthProvider({ children }) {
       if (!res.ok || !data.success) {
         if (res.status === 403 || data.code === 'ACCOUNT_LOCKED') {
           await signOutFirebase();
+
           const lockMsg = data.message || 'Tài khoản Google này liên kết với tài khoản đã bị khóa.';
           setAuthError(lockMsg);
+
           return { success: false, isLocked: true, message: lockMsg };
         }
+
         throw new Error(data.message || 'Đồng bộ tài khoản Google thất bại.');
       }
 
-      // 4. Lưu thông tin đăng nhập và trạng thái người dùng vào sessionStorage
+      // 4. Lưu thông tin đăng nhập
       const userPayload = {
         ...data.user,
         avatar: fbUser.photoURL || data.user.avatar || null,
@@ -153,16 +167,19 @@ export function AuthProvider({ children }) {
       setCurrentUser(userPayload);
 
       return { success: true, user: userPayload, token: data.token };
+
     } catch (err) {
       console.warn('[AuthContext > loginWithGoogle]', err);
 
-      // Nếu lỗi do người dùng tắt popup
-      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+      // Người dùng đóng popup
+      if (
+        err.code === 'auth/popup-closed-by-user' ||
+        err.code === 'auth/cancelled-popup-request'
+      ) {
         return { success: false, cancelled: true };
       }
 
-      // Nếu API key chưa hợp lệ hoặc bị chặn origin trên Firebase Console
-      // -> fallback sang nhập email Google thủ công
+      // Firebase API Key chưa hợp lệ hoặc bị chặn origin
       if (
         err.code === 'auth/api-key-not-valid' ||
         err.code === 'auth/invalid-api-key' ||
@@ -170,12 +187,15 @@ export function AuthProvider({ children }) {
       ) {
         const msg = 'Firebase API Key không hợp lệ. Hãy kiểm tra lại cấu hình trong file .env.';
         setAuthError(msg);
+
         return { success: false, needsManualFallback: true, message: msg };
       }
 
       const msg = err.message || 'Lỗi khi đăng nhập với tài khoản Google.';
       setAuthError(msg);
+
       return { success: false, message: msg };
+
     } finally {
       setLoading(false);
     }
@@ -197,7 +217,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   /**
-   * Cập nhật thông tin người dùng trong State & sessionStorage
+   * Cập nhật thông tin người dùng
    */
   const updateUser = useCallback((updatedData) => {
     setCurrentUser((prev) => {
@@ -220,14 +240,20 @@ export function AuthProvider({ children }) {
     setCurrentUser,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
+
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
+
   return context;
 }

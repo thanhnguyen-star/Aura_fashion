@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from './context/AuthContext.jsx'
-import { AUTH_UNAUTHORIZED_EVENT } from './utils/api.js'
+import { API_BASE, AUTH_UNAUTHORIZED_EVENT } from './utils/api.js'
 import Banner from './components/Banner/Banner.jsx'
 import CaNhanHoa from './components/CaNhanHoa/CaNhanHoa.jsx'
 import DanhMuc from './components/DanhMuc/DanhMuc.jsx'
@@ -33,23 +33,67 @@ export default function App() {
   const [dangMoGioHang, setDangMoGioHang] = useState(false)
 
   // Điều hướng màn hình
-  const [view, setView] = useState('store') // 'store' | 'category' | 'product-detail' | 'login' | 'admin' | 'checkout' | 'profile' | 'my-orders'
+  const [view, setView] = useState(() =>
+    window.location.hash === '#san-pham' ? 'category' : 'store',
+  ) // 'store' | 'category' | 'product-detail' | 'login' | 'admin' | 'checkout' | 'profile' | 'my-orders'
   const [selectedProductId, setSelectedProductId] = useState(1)
-  const [selectedCategory, setSelectedCategory] = useState('nam')
+  const [selectedCategory, setSelectedCategory] = useState(() =>
+    window.location.hash === '#san-pham' ? 'all' : 'nam',
+  )
+  const [catalogSub, setCatalogSub] = useState('all')
+  const [catalogSort, setCatalogSort] = useState('popular')
+  const [catalogNavKey, setCatalogNavKey] = useState(0)
   const [featuredCategory, setFeaturedCategory] = useState('ALL')
+  const [storeCategoryTree, setStoreCategoryTree] = useState([])
+  const [storeRefreshKey, setStoreRefreshKey] = useState(0)
   const [adminTab, setAdminTab] = useState('dashboard')
+  const [productsInitialCategoryId, setProductsInitialCategoryId] = useState(null)
+  const [productsNavKey, setProductsNavKey] = useState(0)
   const [ordersInitialStatus, setOrdersInitialStatus] = useState('all')
   const [ordersNavKey, setOrdersNavKey] = useState(0)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [authModalKey, setAuthModalKey] = useState(0)
+  const [authModalMode, setAuthModalMode] = useState('login')
   const [sessionNotice, setSessionNotice] = useState('')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
-  const openLoginModal = (notice = '') => {
+  const openLoginModal = (notice = '', mode = 'login') => {
     setSessionNotice(notice)
+    setAuthModalMode(mode)
     setAuthModalKey((prev) => prev + 1)
     setIsAuthModalOpen(true)
   }
+
+  const openCatalogPage = (slug = 'all', options = {}) => {
+    setSelectedCategory(slug)
+    setCatalogSub(options.sub || 'all')
+    setCatalogSort(options.sort || 'popular')
+    setCatalogNavKey((prev) => prev + 1)
+    setView('category')
+    if (window.location.hash !== '#san-pham') {
+      window.history.replaceState(null, '', '#san-pham')
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  useEffect(() => {
+    let isMounted = true
+    const loadStoreCategories = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/store/categories`)
+        const json = await res.json().catch(() => ({}))
+        if (isMounted && res.ok && json.success) {
+          setStoreCategoryTree(json.tree || [])
+        }
+      } catch (err) {
+        console.warn('Không tải được danh mục cửa hàng:', err)
+      }
+    }
+    loadStoreCategories()
+    return () => {
+      isMounted = false
+    }
+  }, [storeRefreshKey])
 
   useEffect(() => {
     const handleUnauthorized = (e) => {
@@ -134,6 +178,14 @@ export default function App() {
       <AdminLogin
         onLoginSuccess={handleLoginSuccess}
         onBackToStore={() => setView('store')}
+        onOpenRegister={() => {
+          setView('store')
+          openLoginModal('', 'register')
+        }}
+        onSelectCategory={(slug) => {
+          setSelectedCategory(slug)
+          setView('category')
+        }}
         sessionNotice={sessionNotice}
       />
     )
@@ -146,22 +198,46 @@ export default function App() {
         setOrdersInitialStatus(options.status || 'all')
         setOrdersNavKey((prev) => prev + 1)
       }
+      if (tab === 'products') {
+        setProductsInitialCategoryId(options.categoryId ?? null)
+        setProductsNavKey((prev) => prev + 1)
+      }
       setAdminTab(tab)
     }
 
     const adminProps = {
       adminUser: currentUser,
       onNavigate: handleAdminNavigate,
-      onLogout: handleLogout,
-      onBackToStore: () => setView('store'),
+      onLogout: () => {
+        setStoreRefreshKey((k) => k + 1)
+        handleLogout()
+      },
+      onBackToStore: () => {
+        setStoreRefreshKey((k) => k + 1)
+        setView('store')
+      },
     }
 
     switch (adminTab) {
       case 'products':
-        return <AdminProducts {...adminProps} />
+        return (
+          <AdminProducts
+            key={productsNavKey}
+            initialCategoryId={productsInitialCategoryId}
+            {...adminProps}
+          />
+        )
 
       case 'categories':
-        return <AdminCategories {...adminProps} />
+        return (
+          <AdminCategories
+            {...adminProps}
+            onViewCategoryOnStore={(cat) => {
+              setStoreRefreshKey((k) => k + 1)
+              openCatalogPage(cat?.Slug || 'all')
+            }}
+          />
+        )
       case 'print-templates':
         return <AdminTemplates {...adminProps} />
       case 'orders':
@@ -187,6 +263,7 @@ export default function App() {
         soLuong={tongSoLuong}
         moGioHang={() => setDangMoGioHang(true)}
         currentUser={currentUser}
+        categoryTree={storeCategoryTree}
         onOpenLogin={() => openLoginModal('')}
         onOpenAdmin={(tab = 'dashboard') => {
           setView('admin')
@@ -204,13 +281,16 @@ export default function App() {
         }}
         onOpenSearch={() => setIsSearchOpen(true)}
         onLogout={handleLogout}
-        onSelectCategory={(slug) => {
-          setSelectedCategory(slug)
-          setView('category')
-          window.scrollTo({ top: 0, behavior: 'smooth' })
-        }}
+        onSelectCategory={(slug, options) => openCatalogPage(slug, options)}
         onNavigateStore={(hash) => {
           setView('store')
+          if (window.location.hash === '#san-pham') {
+            window.history.replaceState(
+              null,
+              '',
+              `${window.location.pathname}${window.location.search}`,
+            )
+          }
           setTimeout(() => {
             if (!hash || hash === '#trang-chu') {
               window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -232,6 +312,7 @@ export default function App() {
           setSessionNotice('')
         }}
         onSuccess={handleLoginSuccess}
+        initialMode={authModalMode}
         sessionNotice={sessionNotice}
       />
 
@@ -262,13 +343,22 @@ export default function App() {
         </ProtectedRoute>
       ) : view === 'category' ? (
         <TrangDanhMuc
+          key={catalogNavKey}
           categorySlug={selectedCategory}
-          onChangeCategory={(slug) => {
-            setSelectedCategory(slug)
-            window.scrollTo({ top: 0, behavior: 'smooth' })
-          }}
+          initialSub={catalogSub}
+          initialSort={catalogSort}
+          categoryTree={storeCategoryTree}
+          refreshKey={storeRefreshKey}
+          onChangeCategory={(slug) => openCatalogPage(slug)}
           onBackToStore={() => {
             setView('store')
+            if (window.location.hash === '#san-pham') {
+              window.history.replaceState(
+                null,
+                '',
+                `${window.location.pathname}${window.location.search}`,
+              )
+            }
             window.scrollTo({ top: 0, behavior: 'smooth' })
           }}
           onSelectProduct={(id) => {
@@ -320,16 +410,17 @@ export default function App() {
         <main>
           <Banner />
           <DanhMuc
-            onSelectCategory={(slug) => {
-              setSelectedCategory(slug)
-              setView('category')
-              window.scrollTo({ top: 0, behavior: 'smooth' })
-            }}
+            categoryTree={storeCategoryTree}
+            onSelectCategory={(slug) => openCatalogPage(slug)}
+            onViewAllProducts={() => openCatalogPage('all')}
           />
           <SanPhamTieuBieu
             themVaoGio={themVaoGio}
+            categoryTree={storeCategoryTree}
+            refreshKey={storeRefreshKey}
             activeCategory={featuredCategory}
             onSelectCategory={setFeaturedCategory}
+            onViewAllProducts={() => openCatalogPage('all')}
             onSelectProduct={(id) => {
               setSelectedProductId(id)
               setView('product-detail')

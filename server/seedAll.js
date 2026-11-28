@@ -60,20 +60,59 @@ async function seedAll() {
       );
     }
 
-    // 4. DANH MỤC (danhmuc)
-    console.log('4. Đang nạp Danh Mục sản phẩm...');
-    const categories = [
-      { id: 1, name: 'Áo thun', desc: 'Áo thun cotton dệt compact cao cấp hỗ trợ in DTG', show: 1 },
-      { id: 2, name: 'Áo hoodie', desc: 'Áo hoodie nỉ bông 380gsm form rộng hiện đại', show: 1 },
-      { id: 3, name: 'Phụ kiện', desc: 'Túi tote canvas, nón và phụ kiện cá nhân hóa', show: 1 },
+    // 4. DANH MỤC (danhmuc) - Cây chuẩn (Nam / Nữ / Phụ kiện)
+    console.log('4. Đang nạp Danh Mục sản phẩm dạng cây...');
+    const catTree = [
+      {
+        name: 'Nam',
+        slug: 'nam',
+        desc: 'Thiết kế tối giản, phom dáng hiện đại và dễ phối dành cho nam giới.',
+        order: 1,
+        children: [
+          { name: 'Áo thun', slug: 'nam-ao-thun', desc: 'Áo thun cotton dệt compact, áo polo và sơ mi cơ bản dành cho nam.', order: 1 },
+          { name: 'Hoodie', slug: 'nam-hoodie', desc: 'Áo hoodie nỉ bông dày dặn, giữ phom rộng thoải mái cho nam.', order: 2 },
+          { name: 'Áo khoác', slug: 'nam-ao-khoac', desc: 'Áo khoác jacket, áo gió và áo khoác jean phong cách tối giản cho nam.', order: 3 },
+        ],
+      },
+      {
+        name: 'Nữ',
+        slug: 'nu',
+        desc: 'Đường cắt thanh lịch, tối giản và tinh tế dành cho nữ giới.',
+        order: 2,
+        children: [
+          { name: 'Áo thun', slug: 'nu-ao-thun', desc: 'Áo thun nữ phom chuẩn, chất liệu thoáng mát, dễ phối đồ.', order: 1 },
+          { name: 'Hoodie', slug: 'nu-hoodie', desc: 'Áo hoodie nỉ mềm mịn, phong cách trẻ trung năng động cho nữ.', order: 2 },
+          { name: 'Áo khoác', slug: 'nu-ao-khoac', desc: 'Áo khoác nữ dáng gọn, thanh lịch cho nhiều điều kiện thời tiết.', order: 3 },
+        ],
+      },
+      {
+        name: 'Phụ kiện',
+        slug: 'phu-kien',
+        desc: 'Túi tote, mũ nón, kính mắt và trang sức hoàn thiện phong cách AURA.',
+        order: 3,
+        children: [],
+      },
     ];
-    for (const cat of categories) {
+    const seedSlugIds = {};
+    for (const root of catTree) {
       await conn.query(
-        `INSERT INTO danhmuc (MaDanhMuc, TenDanhMuc, MoTa, HienThi)
-         VALUES (?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE MoTa = VALUES(MoTa), HienThi = VALUES(HienThi)`,
-        [cat.id, cat.name, cat.desc, cat.show]
+        `INSERT INTO danhmuc (MaDanhMucCha, TenDanhMuc, Slug, MoTa, ThuTu, HienThi)
+         VALUES (NULL, ?, ?, ?, ?, 1)
+         ON DUPLICATE KEY UPDATE TenDanhMuc = VALUES(TenDanhMuc), MoTa = VALUES(MoTa), ThuTu = VALUES(ThuTu), HienThi = 1`,
+        [root.name, root.slug, root.desc, root.order]
       );
+      const [[rRow]] = await conn.query('SELECT MaDanhMuc FROM danhmuc WHERE Slug = ?', [root.slug]);
+      seedSlugIds[root.slug] = rRow.MaDanhMuc;
+      for (const child of root.children) {
+        await conn.query(
+          `INSERT INTO danhmuc (MaDanhMucCha, TenDanhMuc, Slug, MoTa, ThuTu, HienThi)
+           VALUES (?, ?, ?, ?, ?, 1)
+           ON DUPLICATE KEY UPDATE MaDanhMucCha = VALUES(MaDanhMucCha), TenDanhMuc = VALUES(TenDanhMuc), MoTa = VALUES(MoTa), ThuTu = VALUES(ThuTu), HienThi = 1`,
+          [rRow.MaDanhMuc, child.name, child.slug, child.desc, child.order]
+        );
+        const [[cRow]] = await conn.query('SELECT MaDanhMuc FROM danhmuc WHERE Slug = ?', [child.slug]);
+        seedSlugIds[child.slug] = cRow.MaDanhMuc;
+      }
     }
 
     // 5. TÀI KHOẢN (taikhoan) - Admin & Khách test
@@ -153,7 +192,7 @@ async function seedAll() {
     const products = [
       {
         id: 1,
-        catId: 1,
+        catId: seedSlugIds['nam-ao-thun'],
         code: 'SP-001',
         name: 'Áo Thun Basic Aura',
         desc: 'Áo thun 100% Cotton Compact 250gsm dệt sợi đôi, cổ bo gân giữ form hoàn hảo. Hỗ trợ in DTG không phai màu.',
@@ -164,7 +203,7 @@ async function seedAll() {
       },
       {
         id: 2,
-        catId: 2,
+        catId: seedSlugIds['nam-hoodie'],
         code: 'SP-002',
         name: 'Áo Hoodie Form Rộng',
         desc: 'Áo hoodie nỉ bông 380gsm dày dặn, mũ 2 lớp đứng form, túi kangaroo tiện lợi.',
@@ -175,7 +214,7 @@ async function seedAll() {
       },
       {
         id: 3,
-        catId: 1,
+        catId: seedSlugIds['nam-ao-thun'],
         code: 'SP-003',
         name: 'Áo Thun Regular Fit Lookbook',
         desc: 'Dáng áo suông vừa vặn chuẩn phong cách Minimalist Brutalism Xuân Hè 2025.',

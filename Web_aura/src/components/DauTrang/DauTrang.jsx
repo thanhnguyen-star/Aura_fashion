@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  ChevronDown,
   CircleUser,
   LayoutGrid,
   LogOut,
@@ -12,14 +13,11 @@ import {
 } from 'lucide-react'
 import './DauTrang.css'
 
-const danhSachMenu = [
-  { ten: 'Trang chủ', duongDan: '#trang-chu' },
-  { ten: 'Nam', duongDan: '#danh-muc-nam', categorySlug: 'nam' },
-  { ten: 'Nữ', duongDan: '#danh-muc-nu', categorySlug: 'nu' },
-  { ten: 'Phụ kiện', duongDan: '#danh-muc-phu-kien', categorySlug: 'phu-kien' },
-  { ten: 'Sản phẩm', duongDan: '#san-pham' },
-  { ten: 'Cá nhân hóa', duongDan: '#ca-nhan-hoa' },
-]
+const ROOT_BANNER_IMAGE = {
+  nam: '/img/nam/banner-nam.jpg',
+  nu: '/img/nu/banner-nu.jpg',
+  'phu-kien': '/img/phu-kien/banner-phu-kien.jpg',
+}
 
 function IconDonHang() {
   return (
@@ -44,6 +42,7 @@ export default function DauTrang({
   soLuong,
   moGioHang,
   currentUser,
+  categoryTree = [],
   onOpenLogin,
   onOpenAdmin,
   onLogout,
@@ -54,10 +53,92 @@ export default function DauTrang({
 }) {
   const [dangMoMenu, setDangMoMenu] = useState(false)
   const [dangMoTaiKhoan, setDangMoTaiKhoan] = useState(false)
+  const [megaMenuOpen, setMegaMenuOpen] = useState(false)
+  const [hoveredCol, setHoveredCol] = useState('default')
+  const [mobileAccordionOpen, setMobileAccordionOpen] = useState(false)
+  const [mobileSubCol, setMobileSubCol] = useState('all')
   const hopTaiKhoanRef = useRef(null)
+  const headerRef = useRef(null)
+
+  const danhSachMenu = useMemo(() => {
+    const rootMenus = categoryTree.map((cat) => ({
+      ten: cat.TenDanhMuc,
+      duongDan: `#danh-muc-${cat.Slug}`,
+      categorySlug: cat.Slug,
+    }))
+    return [
+      { ten: 'Trang chủ', duongDan: '#trang-chu' },
+      ...rootMenus,
+      { ten: 'Sản phẩm', duongDan: '#san-pham', hasMegaMenu: true },
+      { ten: 'Cá nhân hóa', duongDan: '#ca-nhan-hoa' },
+    ]
+  }, [categoryTree])
+
+  const megaMenuColumns = useMemo(() => {
+    return [
+      {
+        id: 'all',
+        title: 'Tất cả sản phẩm',
+        slug: 'all',
+        items: [
+          { label: 'Sản phẩm mới', slug: 'all', sub: 'all', sort: 'newest' },
+          { label: 'Bán chạy nhất', slug: 'all', sub: 'all', sort: 'popular' },
+        ],
+      },
+      ...categoryTree.map((cat) => {
+        const children = Array.isArray(cat.children) ? cat.children : []
+        return {
+          id: cat.Slug,
+          title: cat.TenDanhMuc,
+          slug: cat.Slug,
+          items:
+            children.length > 0
+              ? children.map((child) => ({
+                  label: child.TenDanhMuc,
+                  slug: cat.Slug,
+                  sub: child.Slug,
+                }))
+              : [
+                  {
+                    label: `Tất cả ${cat.TenDanhMuc.toLowerCase()}`,
+                    slug: cat.Slug,
+                    sub: 'all',
+                  },
+                ],
+        }
+      }),
+    ]
+  }, [categoryTree])
+
+  const activeBanners = useMemo(() => {
+    const cards = categoryTree.map((cat) => ({
+      slug: cat.Slug,
+      image:
+        ROOT_BANNER_IMAGE[cat.Slug] ||
+        cat.AnhBia ||
+        '/img/nam/banner-nam.jpg',
+      eyebrow: cat.Slug === 'phu-kien' ? 'Điểm nhấn' : 'Bộ sưu tập',
+      title:
+        cat.Slug === 'nam' || cat.Slug === 'nu'
+          ? `Thời trang ${cat.TenDanhMuc}`
+          : cat.TenDanhMuc,
+    }))
+    if (cards.length <= 2) return cards
+    if (hoveredCol && hoveredCol !== 'default') {
+      const idx = cards.findIndex((c) => c.slug === hoveredCol)
+      if (idx !== -1) {
+        const primary = cards[idx]
+        const secondary = cards[(idx + 1) % cards.length]
+        return [primary, secondary]
+      }
+    }
+    return cards.slice(0, 2)
+  }, [categoryTree, hoveredCol])
 
   const dongMenu = () => {
     setDangMoMenu(false)
+    setMegaMenuOpen(false)
+    setMobileAccordionOpen(false)
   }
 
   // Đóng dropdown khi bấm ra ngoài
@@ -69,11 +150,30 @@ export default function DauTrang({
       ) {
         setDangMoTaiKhoan(false)
       }
+      if (headerRef.current && !headerRef.current.contains(e.target)) {
+        setMegaMenuOpen(false)
+      }
+    }
+
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        setMegaMenuOpen(false)
+        setDangMoTaiKhoan(false)
+      }
     }
 
     document.addEventListener('mousedown', xuLyClickNgoai)
-    return () => document.removeEventListener('mousedown', xuLyClickNgoai)
+    document.addEventListener('keydown', handleEsc)
+    return () => {
+      document.removeEventListener('mousedown', xuLyClickNgoai)
+      document.removeEventListener('keydown', handleEsc)
+    }
   }, [])
+
+  const chonSanPhamFilter = (slug, options = {}) => {
+    dongMenu()
+    onSelectCategory?.(slug, options)
+  }
 
   const xuLyBamTaiKhoan = () => {
     if (!currentUser) {
@@ -89,10 +189,14 @@ export default function DauTrang({
   }
 
   return (
-    <header className="dau-trang">
-      <div className="thanh-thong-bao">
-        Miễn phí giao hàng cho đơn từ 999.000đ
-      </div>
+    <header
+      className="dau-trang"
+      ref={headerRef}
+      onMouseLeave={() => {
+        setMegaMenuOpen(false)
+        setHoveredCol('default')
+      }}
+    >
 
       <div className="khung-noi-dung noi-dung-dau-trang">
         <button
@@ -116,23 +220,109 @@ export default function DauTrang({
         </a>
 
         <nav className={`menu-chinh ${dangMoMenu ? 'dang-mo' : ''}`}>
-          {danhSachMenu.map((item) => (
-            <a
-              key={item.duongDan}
-              href={item.duongDan}
-              onClick={(e) => {
-                dongMenu()
-                if (item.categorySlug) {
-                  e.preventDefault()
-                  onSelectCategory?.(item.categorySlug)
-                  return
-                }
-                onNavigateStore?.(item.duongDan)
-              }}
-            >
-              {item.ten}
-            </a>
-          ))}
+          {danhSachMenu.map((item) => {
+            if (item.hasMegaMenu) {
+              return (
+                <div
+                  key={item.duongDan}
+                  className="menu-san-pham-wrap"
+                  onMouseEnter={() => setMegaMenuOpen(true)}
+                >
+                  <div className="menu-san-pham-row">
+                    <a
+                      href={item.duongDan}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        chonSanPhamFilter('all', { sub: 'all', sort: 'popular' })
+                      }}
+                    >
+                      {item.ten}
+                    </a>
+                    <button
+                      type="button"
+                      className={`mobile-acc-toggle ${mobileAccordionOpen ? 'open' : ''}`}
+                      aria-label="Mở danh mục sản phẩm"
+                      aria-expanded={mobileAccordionOpen}
+                      onClick={() => setMobileAccordionOpen((prev) => !prev)}
+                    >
+                      <ChevronDown size={16} />
+                    </button>
+                  </div>
+
+                  {/* Accordion trên Mobile */}
+                  {mobileAccordionOpen && (
+                    <div className="mobile-mega-accordion">
+                      {megaMenuColumns.map((col) => {
+                        const isColOpen = mobileSubCol === col.id
+                        return (
+                          <div key={col.id} className="mobile-acc-group">
+                            <button
+                              type="button"
+                              className="mobile-acc-head"
+                              onClick={() =>
+                                setMobileSubCol((prev) => (prev === col.id ? '' : col.id))
+                              }
+                            >
+                              <span>{col.title}</span>
+                              <ChevronDown
+                                size={14}
+                                className={isColOpen ? 'rotate-180' : ''}
+                              />
+                            </button>
+                            {isColOpen && (
+                              <div className="mobile-acc-items">
+                                <button
+                                  type="button"
+                                  className="mobile-acc-link mobile-acc-all"
+                                  onClick={() => chonSanPhamFilter(col.slug)}
+                                >
+                                  Xem tất cả {col.title.toLowerCase()}
+                                </button>
+                                {col.items.map((sub) => (
+                                  <button
+                                    key={sub.label}
+                                    type="button"
+                                    className="mobile-acc-link"
+                                    onClick={() =>
+                                      chonSanPhamFilter(sub.slug, {
+                                        sub: sub.sub,
+                                        sort: sub.sort || 'popular',
+                                      })
+                                    }
+                                  >
+                                    {sub.label}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            }
+
+            return (
+              <a
+                key={item.duongDan}
+                href={item.duongDan}
+                onMouseEnter={() => setMegaMenuOpen(false)}
+                onClick={(e) => {
+                  dongMenu()
+                  if (item.categorySlug) {
+                    e.preventDefault()
+                    onSelectCategory?.(item.categorySlug)
+                    return
+                  }
+                  onNavigateStore?.(item.duongDan)
+                }}
+              >
+                {item.ten}
+              </a>
+            )
+          })}
         </nav>
 
         <div className="nhom-tien-ich">
@@ -317,6 +507,71 @@ export default function DauTrang({
           </button>
         </div>
       </div>
+
+      {/* Mega menu Desktop khi hover nút "Sản phẩm" */}
+      {megaMenuOpen && (
+        <div
+          className="mega-menu-san-pham"
+          onMouseEnter={() => setMegaMenuOpen(true)}
+        >
+          <div className="khung-noi-dung mega-menu-inner">
+            <div className="mega-menu-cols">
+              {megaMenuColumns.map((col) => (
+                <div
+                  key={col.id}
+                  className="mega-menu-col"
+                  onMouseEnter={() =>
+                    setHoveredCol(col.id === 'all' ? 'default' : col.id)
+                  }
+                >
+                  <button
+                    type="button"
+                    className="mega-col-title"
+                    onClick={() => chonSanPhamFilter(col.slug)}
+                  >
+                    {col.title}
+                  </button>
+                  <ul className="mega-col-list">
+                    {col.items.map((sub) => (
+                      <li key={sub.label}>
+                        <button
+                          type="button"
+                          className="mega-col-link"
+                          onClick={() =>
+                            chonSanPhamFilter(sub.slug, {
+                              sub: sub.sub,
+                              sort: sub.sort || 'popular',
+                            })
+                          }
+                        >
+                          {sub.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+
+            <div className="mega-menu-banners">
+              {activeBanners.map((banner) => (
+                <button
+                  key={banner.slug}
+                  type="button"
+                  className="mega-banner-card"
+                  onClick={() => chonSanPhamFilter(banner.slug)}
+                >
+                  <img src={banner.image} alt={banner.eyebrow} />
+                  <div className="mega-banner-overlay">
+                    <span>{banner.eyebrow}</span>
+                    <strong>{banner.title}</strong>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   )
 }

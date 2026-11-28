@@ -44,6 +44,42 @@ export function triggerUnauthorizedLogout(message = 'Phiên đăng nhập đã h
   );
 }
 
+export function resolveImageUrl(path) {
+  if (!path) return '';
+  if (path.startsWith('/uploads/')) return `${API_BASE}${path}`;
+  return path;
+}
+
+export async function adminUpload(path, formData) {
+  const token = getAuthToken();
+
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: formData,
+  });
+
+  const data = await res.json().catch(() => ({}));
+
+  if (res.status === 401) {
+    const msg = data.message || data.error || 'Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại';
+    triggerUnauthorizedLogout(msg);
+    const err = new Error(msg);
+    err.status = 401;
+    throw err;
+  }
+
+  if (!res.ok) {
+    const err = new Error(data.message || data.error || `Lỗi tải ảnh (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
+
+  return data;
+}
+
 export async function adminFetch(path, options = {}) {
   const token = getAuthToken();
 

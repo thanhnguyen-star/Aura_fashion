@@ -175,7 +175,7 @@ export default function AdminLayout({
                   type="button"
                   onClick={() => {
                     setShowQuickMenu(false);
-                    onSelectMenu?.('orders');
+                    onSelectMenu?.('orders', { status: 'CHO_XAC_NHAN' });
                   }}
                 >
                   + Xem đơn chờ xử lý

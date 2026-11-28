@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
-  Backpack,
   Gem,
   Heart,
   Layers,
@@ -13,41 +12,63 @@ import {
   ShoppingCart,
   Sparkles,
 } from 'lucide-react';
-import {
-  cauHinhTrangDanhMuc,
-  sanPhamTheoDanhMuc,
-} from '../../data/duLieu.js';
+import { API_BASE, resolveImageUrl } from '../../utils/api.js';
 import '../css/trangDanhMuc.css';
 
+const EMPTY_ARRAY = [];
 const DANH_SACH_SIZE = ['S', 'M', 'L', 'XL', 'XXL'];
 const DANH_SACH_MAU = [
-  { hex: '#111111', ten: 'Đen' },
-  { hex: '#f5f5f4', ten: 'Trắng' },
-  { hex: '#71717a', ten: 'Xám' },
-  { hex: '#d6ccc2', ten: 'Be' },
-  { hex: '#6b3e3e', ten: 'Nâu' },
+  { hex: '#000000', aliases: ['#000000', '#111111'], ten: 'Đen' },
+  { hex: '#FFFFFF', aliases: ['#FFFFFF', '#F5F5F4'], ten: 'Trắng' },
+  { hex: '#71717A', aliases: ['#71717A'], ten: 'Xám' },
+  { hex: '#E4D8C9', aliases: ['#E4D8C9', '#D6CCC2'], ten: 'Be' },
+  { hex: '#6B3E3E', aliases: ['#6B3E3E'], ten: 'Nâu' },
+];
+
+const BANNER_BY_ROOT = {
+  nam: '/img/nam/banner-nam.jpg',
+  nu: '/img/nu/banner-nu.jpg',
+  'phu-kien': '/img/phu-kien/banner-phu-kien.jpg',
+};
+
+const PRICE_RANGES_DEFAULT = [
+  { id: 'all', label: 'Tất cả mức giá', min: 0, max: Infinity },
+  { id: 'under-500', label: 'Dưới 500.000đ', min: 0, max: 499999 },
+  { id: '500-1000', label: '500.000đ – 1.000.000đ', min: 500000, max: 1000000 },
+  { id: 'over-1000', label: 'Trên 1.000.000đ', min: 1000001, max: Infinity },
+];
+
+const PRICE_RANGES_ACCESSORIES = [
+  { id: 'all', label: 'Tất cả mức giá', min: 0, max: Infinity },
+  { id: 'under-300', label: 'Dưới 300.000đ', min: 0, max: 299999 },
+  { id: '300-600', label: '300.000đ – 600.000đ', min: 300000, max: 600000 },
+  { id: 'over-600', label: 'Trên 600.000đ', min: 600001, max: Infinity },
 ];
 
 function dinhDangTien(gia) {
   return `${Number(gia || 0).toLocaleString('vi-VN')}đ`;
 }
 
+function inferIcon(slug = '', name = '') {
+  const txt = `${slug} ${name}`.toLowerCase();
+  if (txt.includes('hoodie')) return 'layers';
+  if (txt.includes('túi')) return 'bag';
+  if (txt.includes('mũ') || txt.includes('nón')) return 'sparkles';
+  if (txt.includes('kính') || txt.includes('trang sức')) return 'gem';
+  if (txt.includes('thun') || txt.includes('khoác') || txt.includes('áo')) return 'shirt';
+  return 'grid';
+}
+
 function IconDanhMucCon({ icon }) {
   switch (icon) {
     case 'shirt':
-    case 'jacket':
-    case 'dress':
       return <Shirt size={15} strokeWidth={1.7} />;
     case 'bag':
       return <ShoppingBag size={15} strokeWidth={1.7} />;
-    case 'backpack':
-      return <Backpack size={15} strokeWidth={1.7} />;
     case 'gem':
       return <Gem size={15} strokeWidth={1.7} />;
     case 'layers':
-    case 'trousers':
       return <Layers size={15} strokeWidth={1.7} />;
-    case 'cap':
     case 'sparkles':
       return <Sparkles size={15} strokeWidth={1.7} />;
     default:
@@ -55,17 +76,55 @@ function IconDanhMucCon({ icon }) {
   }
 }
 
+function collectSubtreeIds(node) {
+  const ids = new Set([Number(node.MaDanhMuc)]);
+  for (const child of node.children || []) {
+    for (const cid of collectSubtreeIds(child)) {
+      ids.add(cid);
+    }
+  }
+  return ids;
+}
+
+function resolveCatalogContext(tree, categorySlug) {
+  if (!categorySlug || categorySlug === 'all') {
+    return { rootNode: null, targetNode: null, childSlugFromRoute: null };
+  }
+
+  for (const root of tree) {
+    if (root.Slug === categorySlug) {
+      return { rootNode: root, targetNode: root, childSlugFromRoute: null };
+    }
+    for (const child of root.children || []) {
+      if (child.Slug === categorySlug) {
+        return {
+          rootNode: root,
+          targetNode: child,
+          childSlugFromRoute: child.Slug,
+        };
+      }
+    }
+  }
+
+  return { rootNode: null, targetNode: null, childSlugFromRoute: null };
+}
+
 export default function TrangDanhMuc({
-  categorySlug = 'nam',
+  categorySlug = 'all',
+  initialSub = 'all',
+  initialSort = 'popular',
+  categoryTree: propTree = EMPTY_ARRAY,
+  refreshKey = 0,
   onChangeCategory,
   onBackToStore,
   onSelectProduct,
   themVaoGio,
 }) {
-  const config = cauHinhTrangDanhMuc[categorySlug] || cauHinhTrangDanhMuc.nam;
+  const [localTree, setLocalTree] = useState(propTree);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [selectedSub, setSelectedSub] = useState('all');
-  // Draft filters (chỉ áp dụng khi bấm "Áp dụng" hoặc đổi trực tiếp)
+  const [selectedSub, setSelectedSub] = useState(initialSub);
   const [draftSize, setDraftSize] = useState('');
   const [draftColor, setDraftColor] = useState('');
   const [draftPrice, setDraftPrice] = useState('all');
@@ -74,9 +133,127 @@ export default function TrangDanhMuc({
   const [appliedColor, setAppliedColor] = useState('');
   const [appliedPrice, setAppliedPrice] = useState('all');
 
-  const [sortBy, setSortBy] = useState('popular');
+  const [sortBy, setSortBy] = useState(initialSort);
   const [viewMode, setViewMode] = useState('grid');
   const [favorites, setFavorites] = useState(() => new Set());
+
+  const tree = useMemo(
+    () => (propTree.length > 0 ? propTree : localTree),
+    [propTree, localTree],
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const [prodRes, catRes] = await Promise.all([
+          fetch(`${API_BASE}/api/store/products`),
+          propTree.length === 0
+            ? fetch(`${API_BASE}/api/store/categories`)
+            : Promise.resolve(null),
+        ]);
+
+        const prodJson = await prodRes.json().catch(() => ({}));
+        if (isMounted && prodRes.ok && prodJson.success) {
+          setProducts(prodJson.data || []);
+        }
+
+        if (catRes) {
+          const catJson = await catRes.json().catch(() => ({}));
+          if (isMounted && catRes.ok && catJson.success) {
+            setLocalTree(catJson.tree || []);
+          }
+        }
+      } catch (err) {
+        console.error('Lỗi tải dữ liệu trang danh mục:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, [refreshKey, propTree.length]);
+
+  // Xác định danh mục gốc / con đang xem từ DB tree (hỗ trợ cả link trực tiếp vào slug con)
+  const resolvedContext = resolveCatalogContext(tree, categorySlug);
+
+  const activeRoot = resolvedContext.rootNode;
+  const effectiveSub =
+    selectedSub !== 'all'
+      ? selectedSub
+      : resolvedContext.childSlugFromRoute || 'all';
+
+  const activeSubNode = useMemo(() => {
+    if (!effectiveSub || effectiveSub === 'all') return null;
+    for (const root of tree) {
+      if (root.Slug === effectiveSub) return root;
+      for (const child of root.children || []) {
+        if (child.Slug === effectiveSub) return child;
+      }
+    }
+    return null;
+  }, [tree, effectiveSub]);
+
+  const rootTabs = useMemo(
+    () => [
+      { slug: 'all', label: 'Tất cả' },
+      ...tree.map((r) => ({ slug: r.Slug, label: r.TenDanhMuc })),
+    ],
+    [tree],
+  );
+
+  const sidebarItems = useMemo(() => {
+    if (activeRoot) {
+      const children = activeRoot.children || [];
+      return [
+        {
+          id: 'all',
+          ten:
+            children.length > 0
+              ? 'Tất cả sản phẩm'
+              : `Tất cả ${activeRoot.TenDanhMuc.toLowerCase()}`,
+          icon: 'grid',
+          isChild: false,
+        },
+        ...children.map((c) => ({
+          id: c.Slug,
+          ten: c.TenDanhMuc,
+          icon: inferIcon(c.Slug, c.TenDanhMuc),
+          isChild: false,
+        })),
+      ];
+    }
+
+    // Ở trang "Tất cả sản phẩm": hiện toàn bộ cây danh mục đang hiển thị từ DB
+    const items = [{ id: 'all', ten: 'Tất cả sản phẩm', icon: 'grid', isChild: false }];
+    for (const root of tree) {
+      items.push({
+        id: root.Slug,
+        ten: root.TenDanhMuc,
+        icon: inferIcon(root.Slug, root.TenDanhMuc),
+        isChild: false,
+      });
+      for (const child of root.children || []) {
+        items.push({
+          id: child.Slug,
+          ten: child.TenDanhMuc,
+          icon: inferIcon(child.Slug, child.TenDanhMuc),
+          isChild: true,
+        });
+      }
+    }
+    return items;
+  }, [activeRoot, tree]);
+
+  const isAccessoryCategory = activeRoot?.Slug === 'phu-kien';
+  const showSizes = !isAccessoryCategory;
+  const priceOptions = isAccessoryCategory
+    ? PRICE_RANGES_ACCESSORIES
+    : PRICE_RANGES_DEFAULT;
 
   const resetFilters = () => {
     setSelectedSub('all');
@@ -86,11 +263,29 @@ export default function TrangDanhMuc({
     setAppliedSize('');
     setAppliedColor('');
     setAppliedPrice('all');
+    if (resolvedContext.childSlugFromRoute && activeRoot) {
+      onChangeCategory?.(activeRoot.Slug);
+    }
   };
 
   const handleSwitchCategory = (slug) => {
-    resetFilters();
+    setSelectedSub('all');
+    setDraftSize('');
+    setDraftColor('');
+    setDraftPrice('all');
+    setAppliedSize('');
+    setAppliedColor('');
+    setAppliedPrice('all');
     onChangeCategory?.(slug);
+  };
+
+  const handleSelectSidebarItem = (itemId) => {
+    if (itemId === 'all' && resolvedContext.childSlugFromRoute && activeRoot) {
+      setSelectedSub('all');
+      onChangeCategory?.(activeRoot.Slug);
+      return;
+    }
+    setSelectedSub(itemId);
   };
 
   const handleApplyFilter = () => {
@@ -111,45 +306,80 @@ export default function TrangDanhMuc({
 
   const danhSachLoc = useMemo(() => {
     const priceRule =
-      config.mucGia.find((m) => m.id === appliedPrice) || config.mucGia[0];
+      priceOptions.find((m) => m.id === appliedPrice) || priceOptions[0];
 
-    let list = sanPhamTheoDanhMuc.filter((sp) => sp.danhMuc === config.slug);
-
-    if (selectedSub !== 'all') {
-      list = list.filter((sp) => sp.loai === selectedSub);
+    let allowedCatIds = null;
+    if (activeSubNode) {
+      allowedCatIds = collectSubtreeIds(activeSubNode);
+    } else if (activeRoot) {
+      allowedCatIds = collectSubtreeIds(activeRoot);
     }
 
-    if (config.coKichCo && appliedSize) {
-      list = list.filter((sp) => sp.sizes.includes(appliedSize));
+    let list = allowedCatIds
+      ? products.filter((sp) => allowedCatIds.has(Number(sp.MaDanhMuc)))
+      : [...products];
+
+    if (showSizes && appliedSize) {
+      list = list.filter((sp) => (sp.sizes || []).includes(appliedSize));
     }
 
     if (appliedColor) {
-      list = list.filter((sp) => sp.colors.includes(appliedColor));
+      const colorMeta = DANH_SACH_MAU.find((c) => c.hex === appliedColor);
+      const validHexes = new Set(
+        (colorMeta?.aliases || [appliedColor]).map((h) => h.toUpperCase()),
+      );
+      list = list.filter((sp) =>
+        (sp.colors || []).some((hex) => validHexes.has(String(hex).toUpperCase())),
+      );
     }
 
     list = list.filter(
-      (sp) => sp.gia >= priceRule.min && sp.gia <= priceRule.max
+      (sp) => Number(sp.GiaBan) >= priceRule.min && Number(sp.GiaBan) <= priceRule.max,
     );
 
     const sorted = [...list];
     if (sortBy === 'price-asc') {
-      sorted.sort((a, b) => a.gia - b.gia);
+      sorted.sort((a, b) => Number(a.GiaBan) - Number(b.GiaBan));
     } else if (sortBy === 'price-desc') {
-      sorted.sort((a, b) => b.gia - a.gia);
+      sorted.sort((a, b) => Number(b.GiaBan) - Number(a.GiaBan));
     } else if (sortBy === 'newest') {
-      sorted.sort((a, b) => (b.nhan === 'Mới' ? 1 : 0) - (a.nhan === 'Mới' ? 1 : 0));
+      sorted.sort((a, b) => Number(b.MaSanPham) - Number(a.MaSanPham));
     } else {
-      sorted.sort((a, b) => (b.phoBien || 0) - (a.phoBien || 0));
+      sorted.sort(
+        (a, b) =>
+          (b.NoiBat ? 1 : 0) - (a.NoiBat ? 1 : 0) ||
+          Number(b.MaSanPham) - Number(a.MaSanPham),
+      );
     }
 
     return sorted;
-  }, [config, selectedSub, appliedSize, appliedColor, appliedPrice, sortBy]);
+  }, [
+    products,
+    priceOptions,
+    appliedPrice,
+    activeSubNode,
+    activeRoot,
+    showSizes,
+    appliedSize,
+    appliedColor,
+    sortBy,
+  ]);
 
   const hasActiveFilter =
-    selectedSub !== 'all' ||
+    effectiveSub !== 'all' ||
     Boolean(appliedSize) ||
     Boolean(appliedColor) ||
     appliedPrice !== 'all';
+
+  const displayCategory = activeSubNode || activeRoot;
+  const bannerTitle = displayCategory
+    ? displayCategory.TenDanhMuc.toUpperCase()
+    : 'TẤT CẢ SẢN PHẨM';
+  const bannerDesc =
+    displayCategory?.MoTa ||
+    'Toàn bộ thiết kế tối giản Nam, Nữ và Phụ kiện từ AURA Studio';
+  const bannerImg =
+    (activeRoot && BANNER_BY_ROOT[activeRoot.Slug]) || '/img/nam/banner-nam.jpg';
 
   return (
     <div className="tdm-page">
@@ -166,11 +396,27 @@ export default function TrangDanhMuc({
                 AURA
               </button>
               <span>&gt;</span>
-              <span className="tdm-bc-active">{config.breadcrumb}</span>
+              {activeRoot && activeSubNode && activeSubNode.MaDanhMuc !== activeRoot.MaDanhMuc ? (
+                <>
+                  <button
+                    type="button"
+                    className="tdm-bc-btn"
+                    onClick={() => handleSwitchCategory(activeRoot.Slug)}
+                  >
+                    {activeRoot.TenDanhMuc}
+                  </button>
+                  <span>&gt;</span>
+                  <span className="tdm-bc-active">{activeSubNode.TenDanhMuc}</span>
+                </>
+              ) : (
+                <span className="tdm-bc-active">
+                  {displayCategory ? displayCategory.TenDanhMuc : 'Tất cả sản phẩm'}
+                </span>
+              )}
             </div>
 
-            <h1 className="tdm-banner-title">{config.tieuDe}</h1>
-            <p className="tdm-banner-desc">{config.moTa}</p>
+            <h1 className="tdm-banner-title">{bannerTitle}</h1>
+            <p className="tdm-banner-desc">{bannerDesc}</p>
 
             <div className="tdm-banner-actions">
               <a href="#tdm-catalog" className="tdm-cta-btn">
@@ -178,17 +424,13 @@ export default function TrangDanhMuc({
               </a>
 
               <div className="tdm-cat-switcher" role="tablist" aria-label="Chuyển danh mục">
-                {[
-                  { slug: 'nam', label: 'Nam' },
-                  { slug: 'nu', label: 'Nữ' },
-                  { slug: 'phu-kien', label: 'Phụ kiện' },
-                ].map((tab) => (
+                {rootTabs.map((tab) => (
                   <button
                     key={tab.slug}
                     type="button"
                     role="tab"
-                    aria-selected={config.slug === tab.slug}
-                    className={`tdm-cat-tab ${config.slug === tab.slug ? 'active' : ''}`}
+                    aria-selected={(activeRoot?.Slug || 'all') === tab.slug}
+                    className={`tdm-cat-tab ${(activeRoot?.Slug || 'all') === tab.slug ? 'active' : ''}`}
                     onClick={() => handleSwitchCategory(tab.slug)}
                   >
                     {tab.label}
@@ -199,7 +441,7 @@ export default function TrangDanhMuc({
           </div>
 
           <div className="tdm-banner-visual">
-            <img src={config.anhBanner} alt={config.tieuDe} />
+            <img src={bannerImg} alt={bannerTitle} />
             <div className="tdm-watermark">
               <strong>AURA</strong>
               <span>WEAR YOUR STYLE</span>
@@ -212,16 +454,27 @@ export default function TrangDanhMuc({
       <section className="khung-noi-dung tdm-body" id="tdm-catalog">
         {/* SIDEBAR */}
         <aside className="tdm-sidebar">
-          {/* Danh mục con */}
           <div className="tdm-filter-block">
             <h2 className="tdm-sidebar-heading">DANH MỤC</h2>
+            <div className="tdm-main-cat-pills">
+              {rootTabs.map((tab) => (
+                <button
+                  key={tab.slug}
+                  type="button"
+                  className={`tdm-main-cat-pill ${(activeRoot?.Slug || 'all') === tab.slug ? 'active' : ''}`}
+                  onClick={() => handleSwitchCategory(tab.slug)}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
             <ul className="tdm-subcat-list">
-              {config.danhMucCon.map((sub) => (
+              {sidebarItems.map((sub) => (
                 <li key={sub.id}>
                   <button
                     type="button"
-                    className={`tdm-subcat-btn ${selectedSub === sub.id ? 'active' : ''}`}
-                    onClick={() => setSelectedSub(sub.id)}
+                    className={`tdm-subcat-btn ${sub.isChild ? 'is-child' : ''} ${effectiveSub === sub.id ? 'active' : ''}`}
+                    onClick={() => handleSelectSidebarItem(sub.id)}
                   >
                     <IconDanhMucCon icon={sub.icon} />
                     <span>{sub.ten}</span>
@@ -250,7 +503,7 @@ export default function TrangDanhMuc({
               )}
             </div>
 
-            {config.coKichCo && (
+            {showSizes && (
               <div className="tdm-filter-group">
                 <span className="tdm-filter-label">Kích cỡ</span>
                 <div className="tdm-size-row">
@@ -290,11 +543,11 @@ export default function TrangDanhMuc({
             <div className="tdm-filter-group">
               <span className="tdm-filter-label">Giá tiền</span>
               <div className="tdm-price-list">
-                {config.mucGia.map((m) => (
+                {priceOptions.map((m) => (
                   <label key={m.id} className="tdm-price-option">
                     <input
                       type="radio"
-                      name={`price-${config.slug}`}
+                      name={`price-${activeRoot?.Slug || 'all'}`}
                       checked={draftPrice === m.id}
                       onChange={() => setDraftPrice(m.id)}
                     />
@@ -312,23 +565,13 @@ export default function TrangDanhMuc({
               Áp dụng
             </button>
           </div>
-
-          {/* Promo banner nhỏ */}
-          <div className="tdm-promo-card">
-            <img src={config.promo.anh} alt={config.promo.title} />
-            <div className="tdm-promo-text">
-              <span>{config.promo.title}</span>
-              <strong>{config.promo.highlight}</strong>
-              <small>{config.promo.cta}</small>
-            </div>
-          </div>
         </aside>
 
         {/* LƯỚI SẢN PHẨM */}
         <div className="tdm-main">
           <div className="tdm-toolbar">
             <p className="tdm-count">
-              Hiển thị <strong>1 – {danhSachLoc.length}</strong> / {danhSachLoc.length} sản phẩm
+              Hiển thị <strong>{danhSachLoc.length > 0 ? 1 : 0} – {danhSachLoc.length}</strong> / {danhSachLoc.length} sản phẩm
             </p>
 
             <div className="tdm-toolbar-right">
@@ -367,7 +610,11 @@ export default function TrangDanhMuc({
             </div>
           </div>
 
-          {danhSachLoc.length === 0 ? (
+          {loading ? (
+            <div className="tdm-empty">
+              <p>Đang tải danh sách sản phẩm...</p>
+            </div>
+          ) : danhSachLoc.length === 0 ? (
             <div className="tdm-empty">
               <p>Không tìm thấy sản phẩm phù hợp với bộ lọc hiện tại.</p>
               <button type="button" onClick={resetFilters}>
@@ -377,59 +624,56 @@ export default function TrangDanhMuc({
           ) : (
             <div className={`tdm-grid ${viewMode === 'list' ? 'tdm-grid-list' : ''}`}>
               {danhSachLoc.map((sp) => {
-                const isFav = favorites.has(sp.id);
+                const isFav = favorites.has(sp.MaSanPham);
                 return (
                   <article
-                    key={sp.id}
+                    key={sp.MaSanPham}
                     className="tdm-card"
-                    onClick={() => onSelectProduct?.(sp.productId || 1)}
+                    onClick={() => onSelectProduct?.(sp.MaSanPham)}
                   >
                     <div className="tdm-card-img-wrap">
-                      <img src={sp.anh} alt={sp.ten} />
+                      <img
+                        src={resolveImageUrl(sp.AnhDaiDien) || '/img/sp1.png'}
+                        alt={sp.TenSanPham}
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = '/img/sp1.png';
+                        }}
+                      />
 
-                      {sp.nhan && (
-                        <span
-                          className={`tdm-badge ${
-                            sp.nhan === 'Mới' ? 'tdm-badge-new' : ''
-                          }`}
-                        >
-                          {sp.nhan}
-                        </span>
-                      )}
+                      {sp.HoTroIn ? (
+                        <span className="tdm-badge tdm-badge-new">In theo mẫu</span>
+                      ) : sp.NoiBat ? (
+                        <span className="tdm-badge tdm-badge-new">Nổi bật</span>
+                      ) : null}
 
                       <button
                         type="button"
                         className={`tdm-fav-btn ${isFav ? 'active' : ''}`}
-                        onClick={(e) => toggleFavorite(e, sp.id)}
                         aria-label="Yêu thích"
+                        onClick={(e) => toggleFavorite(e, sp.MaSanPham)}
                       >
-                        <Heart size={15} fill={isFav ? 'currentColor' : 'none'} />
+                        <Heart size={15} fill={isFav ? '#ef4444' : 'none'} />
                       </button>
                     </div>
 
                     <div className="tdm-card-body">
-                      <h3 className="tdm-card-title">{sp.ten}</h3>
-
-                      <div className="tdm-card-price">
-                        <strong>{dinhDangTien(sp.gia)}</strong>
-                        {sp.giaGoc && (
-                          <span className="tdm-card-old-price">
-                            {dinhDangTien(sp.giaGoc)}
-                          </span>
-                        )}
+                      <h3 className="tdm-card-title">{sp.TenSanPham}</h3>
+                      <div className="tdm-card-prices">
+                        <span className="tdm-price">{dinhDangTien(sp.GiaBan)}</span>
                       </div>
 
                       <button
                         type="button"
-                        className="tdm-add-btn"
+                        className="tdm-add-cart-btn"
                         onClick={(e) => {
                           e.stopPropagation();
-                          themVaoGio?.({
-                            id: sp.id,
-                            productId: sp.productId || 1,
-                            ten: sp.ten,
-                            gia: sp.gia,
-                            anh: sp.anh,
+                          themVaoGio({
+                            id: sp.MaSanPham,
+                            productId: sp.MaSanPham,
+                            ten: sp.TenSanPham,
+                            gia: sp.GiaBan,
+                            anh: resolveImageUrl(sp.AnhDaiDien) || '/img/sp1.png',
                             size: sp.sizes?.[0] || null,
                           });
                         }}

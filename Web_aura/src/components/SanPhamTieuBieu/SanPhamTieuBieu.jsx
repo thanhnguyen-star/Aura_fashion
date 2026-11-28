@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Plus, Sparkles } from 'lucide-react'
+import { API_BASE, resolveImageUrl } from '../../utils/api.js'
 import { danhSachSanPham } from '../../data/duLieu.js'
 import './SanPhamTieuBieu.css'
 
@@ -7,18 +8,24 @@ const dinhDangGia = (gia) => {
   return `${(gia || 0).toLocaleString('vi-VN')}đ`
 }
 
-const CATEGORIES = [
-  { id: 'ALL', label: 'Tất cả' },
-  { id: 1, label: 'Áo thun' },
-  { id: 2, label: 'Áo hoodie' },
-  { id: 3, label: 'Phụ kiện' },
-]
+function collectNodeIds(node) {
+  const ids = new Set([Number(node.MaDanhMuc)])
+  for (const child of node.children || []) {
+    for (const cid of collectNodeIds(child)) {
+      ids.add(cid)
+    }
+  }
+  return ids
+}
 
 export default function SanPhamTieuBieu({
   themVaoGio,
   onSelectProduct,
+  categoryTree = [],
+  refreshKey = 0,
   activeCategory = 'ALL',
   onSelectCategory,
+  onViewAllProducts,
 }) {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(false)
@@ -28,10 +35,10 @@ export default function SanPhamTieuBieu({
     const fetchProducts = async () => {
       try {
         setLoading(true)
-        const res = await fetch('http://localhost:5000/api/store/products')
+        const res = await fetch(`${API_BASE}/api/store/products`)
         const json = await res.json().catch(() => ({}))
-        if (isMounted && res.ok && json.success && json.data.length > 0) {
-          setProducts(json.data)
+        if (isMounted && res.ok && json.success) {
+          setProducts(json.data || [])
         } else if (isMounted) {
           setProducts(danhSachSanPham)
         }
@@ -47,23 +54,29 @@ export default function SanPhamTieuBieu({
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [refreshKey])
 
-  const handleCategoryClick = (catId) => {
-    onSelectCategory?.(catId)
-  }
+  const categoryTabs = useMemo(() => {
+    const roots = categoryTree.map((cat) => ({
+      id: cat.Slug,
+      label: cat.TenDanhMuc,
+      ids: collectNodeIds(cat),
+    }))
+    return [{ id: 'ALL', label: 'Tất cả', ids: null }, ...roots]
+  }, [categoryTree])
 
-  const filteredProducts = products.filter((sp) => {
-    if (activeCategory === 'ALL') return true
-    if (sp.MaDanhMuc) {
-      return sp.MaDanhMuc === Number(activeCategory)
-    }
-    // Fallback cho dữ liệu mock
-    if (activeCategory === 1) return (sp.ten || '').toLowerCase().includes('áo') && !(sp.ten || '').toLowerCase().includes('khoác')
-    if (activeCategory === 2) return (sp.ten || '').toLowerCase().includes('khoác') || (sp.ten || '').toLowerCase().includes('hoodie')
-    if (activeCategory === 3) return (sp.ten || '').toLowerCase().includes('túi') || (sp.ten || '').toLowerCase().includes('phụ kiện')
-    return true
-  })
+  const activeTabObj =
+    categoryTabs.find((t) => t.id === activeCategory) || categoryTabs[0]
+
+  const filteredProducts = useMemo(() => {
+    const matched =
+      !activeTabObj?.ids
+        ? products
+        : products.filter((sp) =>
+          activeTabObj.ids.has(Number(sp.MaDanhMuc)),
+        )
+    return matched.slice(0, 8)
+  }, [products, activeTabObj])
 
   return (
     <section
@@ -78,17 +91,25 @@ export default function SanPhamTieuBieu({
             <h2 id="tieu-de-san-pham">Sản phẩm tiêu biểu</h2>
           </div>
 
-          <a href="#san-pham">Xem tất cả →</a>
+          <a
+            href="#san-pham"
+            onClick={(e) => {
+              e.preventDefault()
+              onViewAllProducts?.()
+            }}
+          >
+            Xem tất cả →
+          </a>
         </div>
 
-        {/* BỘ LỌC DANH MỤC */}
+        {/* BỘ LỌC DANH MỤC ĐỌC TỪ DB */}
         <div className="bo-loc-danh-muc">
-          {CATEGORIES.map((cat) => (
+          {categoryTabs.map((cat) => (
             <button
               key={cat.id}
               type="button"
-              className={`nut-loc-danh-muc ${activeCategory === cat.id ? 'dang-chon' : ''}`}
-              onClick={() => handleCategoryClick(cat.id)}
+              className={`nut-loc-danh-muc ${activeTabObj?.id === cat.id ? 'dang-chon' : ''}`}
+              onClick={() => onSelectCategory?.(cat.id)}
             >
               {cat.label}
             </button>
@@ -109,7 +130,7 @@ export default function SanPhamTieuBieu({
               const id = sanPham.MaSanPham || sanPham.id
               const ten = sanPham.TenSanPham || sanPham.ten
               const gia = sanPham.GiaBan || sanPham.gia
-              const anh = sanPham.AnhDaiDien || sanPham.anh || '/img/sp1.png'
+              const anh = resolveImageUrl(sanPham.AnhDaiDien || sanPham.anh) || '/img/sp1.png'
               const nhan = sanPham.HoTroIn ? 'In theo mẫu' : sanPham.nhan || 'Mới'
 
               return (
@@ -123,7 +144,9 @@ export default function SanPhamTieuBieu({
                     <img src={anh} alt={ten} />
 
                     <span className="nhan-san-pham">
-                      {sanPham.HoTroIn ? <Sparkles size={11} style={{ display: 'inline', marginRight: 3 }} /> : null}
+                      {sanPham.HoTroIn ? (
+                        <Sparkles size={11} style={{ display: 'inline', marginRight: 3 }} />
+                      ) : null}
                       {nhan}
                     </span>
 
